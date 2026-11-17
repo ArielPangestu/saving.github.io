@@ -16,6 +16,16 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{background:var(--bg);-webkit-text-size-adjust:100%}
 body{margin:0;color:var(--ink);font:17px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+
+/* === HALAMAN LOGIN GERBANG UTAMA === */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+.login-card{background:var(--card);width:100%;max-width:400px;border-radius:28px;padding:32px 24px;text-align:center;box-shadow:var(--sh)}
+.login-card svg{margin:0 auto 14px;display:block}
+.login-card h1{margin:0;font-size:1.6rem;letter-spacing:-.02em}
+.login-card p{margin:6px 0 22px;color:var(--mute);font-size:.92rem}
+.login-card input{text-align:center;font-size:1.5rem;letter-spacing:.25em;font-weight:700;min-height:56px;margin-bottom:14px}
+.login-err{color:var(--out);font-size:.86rem;min-height:1.3em;margin:10px 0 0;font-weight:500}
+
 main{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(96px + env(safe-area-inset-bottom,0px))}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
 .top-left{display:flex;align-items:center;gap:12px}
@@ -65,7 +75,7 @@ button.main{width:100%;min-height:50px;border:0;border-radius:15px;background:va
 button.main:active{transform:scale(.98);opacity:.9}
 button.main:disabled{opacity:.5}
 button.danger{width:100%;min-height:48px;border:0;border-radius:14px;background:rgba(215,0,21,.12);color:var(--out);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;margin-top:10px}
-button.link{display:block;margin:4px auto;padding:12px;background:none;border:0;color:#0A84FF;font-family:inherit;font-size:15px;cursor:pointer}
+button.link{display:block;margin:12px auto;padding:12px;background:none;border:0;color:var(--out);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer}
 button.pill{padding:6px 12px;border:0;border-radius:99px;background:var(--fill);color:#0A84FF;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer}
 button.pill.ok{background:rgba(31,138,62,.14);color:var(--in)}
 
@@ -209,7 +219,7 @@ select#bln{width:auto;min-width:165px;font-weight:600}
 /* Print / Ekspor PDF */
 @media print {
   body{background:#fff;color:#000}
-  .tabs,#tCatat,#btnTarget,#btnBudget,.export-btns,#gantiPin,#pinBox,.pill,.sync-btn{display:none!important}
+  .tabs,#tCatat,#btnTarget,#btnBudget,.export-btns,#gantiPin,#loginScreen,.pill,.sync-btn{display:none!important}
   #tDash{display:block!important}
   main{max-width:100%;padding:0}
   .saldo,.save-card,.mini,.panel,.dash-hero{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
@@ -217,7 +227,27 @@ select#bln{width:auto;min-width:165px;font-weight:600}
 </style>
 </head>
 <body>
-<main>
+
+<!-- === HALAMAN LOGIN GERBANG UTAMA (MUNCUL PERTAMA) === -->
+<section class="login-screen" id="loginScreen">
+  <form class="login-card" id="loginForm">
+    <svg viewBox="0 0 64 64" width="60" height="60" role="img" aria-label="Dompet">
+      <rect x="8" y="14" width="44" height="36" rx="9" fill="#D68F2B"/>
+      <rect x="8" y="20" width="46" height="32" rx="9" fill="#E8A33D"/>
+      <path d="M16 14h28a6 6 0 0 1 6 6H10a6 6 0 0 1 6-6z" fill="#12343B" opacity=".18"/>
+      <rect x="38" y="30" width="18" height="12" rx="6" fill="#0F3D3E"/>
+      <circle cx="44" cy="36" r="2.5" fill="#E8A33D"/>
+    </svg>
+    <h1>Catatan Keuangan</h1>
+    <p>Masukkan PIN Ariel atau Poppy untuk masuk</p>
+    <input type="password" id="loginPinInput" inputmode="numeric" autocomplete="off" placeholder="••••••" required>
+    <button class="main" id="simpanPin" type="submit">Masuk</button>
+    <div class="login-err" id="loginErr" role="alert"></div>
+  </form>
+</section>
+
+<!-- === HALAMAN UTAMA APLIKASI (DISEMBUNYIKAN SEBELUM LOGIN BERHASIL) === -->
+<main id="appMain" hidden>
   <header class="top">
     <div class="top-left">
       <svg class="logo" viewBox="0 0 64 64" width="44" height="44" role="img" aria-label="Dompet">
@@ -358,7 +388,7 @@ select#bln{width:auto;min-width:165px;font-weight:600}
       </div>
     </div>
     <ul id="list"></ul>
-    <button type="button" class="link" id="btnLoadMore" hidden>Tampilkan lebih banyak</button>
+    <button type="button" class="link" id="btnLoadMore" hidden style="color:#0A84FF">Tampilkan lebih banyak</button>
   </div>
   </section>
 
@@ -408,12 +438,7 @@ select#bln{width:auto;min-width:165px;font-weight:600}
     </div>
   </section>
 
-  <div class="panel" id="pinBox" hidden>
-    <h2>Masukkan PIN</h2>
-    <label class="f">PIN<input type="password" id="pin" inputmode="numeric" autocomplete="off"></label>
-    <button class="main" id="simpanPin" type="button">Buka</button>
-  </div>
-  <button class="link" id="gantiPin" type="button">Ganti PIN</button>
+  <button class="link" id="gantiPin" type="button">Keluar / Ganti Akun</button>
 </main>
 
 <!-- Modal 1: Edit / Hapus Transaksi -->
@@ -538,7 +563,8 @@ const rpShort = n => {
 };
 const store = {
   get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
-  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
 };
 let rows = store.get('rows', []);
 let pending = store.get('pending', []);
@@ -563,18 +589,79 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvlmqFqakKUSPtsV8ho
 const urlOk = /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(SCRIPT_URL);
 let pin = store.get('pin', '');
 
-// State cepat untuk form & filter
 let activeOleh = store.get('oleh', 'Ariel');
 let isPatungan = false;
 let quickHistFilter = 'all';
 $('olehLabel').textContent = activeOleh;
-if ($('userGreet')) $('userGreet').textContent = activeOleh;
+$('userGreet').textContent = activeOleh;
 
 const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
 $('tanggal').value = today();
 $('bulan').textContent = new Date().toLocaleDateString('id-ID', { month:'long', year:'numeric' });
-$('pin').value = pin;
-if (!pin) $('pinBox').hidden = false;
+
+// === KONTROL GERBANG LOGIN ===
+function showLoginScreen(errMsg = '') {
+  $('loginScreen').hidden = false;
+  $('appMain').hidden = true;
+  $('loginErr').textContent = errMsg;
+  $('loginPinInput').value = '';
+  $('loginPinInput').focus();
+}
+
+function showMainApp() {
+  $('loginScreen').hidden = true;
+  $('appMain').hidden = false;
+  $('loginErr').textContent = '';
+  render();
+}
+
+$('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const inputPin = $('loginPinInput').value.trim();
+  if (!inputPin) {
+    $('loginErr').textContent = 'Masukkan PIN terlebih dahulu.';
+    return;
+  }
+  $('simpanPin').disabled = true;
+  $('simpanPin').textContent = 'Memeriksa PIN...';
+  $('loginErr').textContent = '';
+
+  try {
+    const res = await fetch(SCRIPT_URL + '?pin=' + encodeURIComponent(inputPin) + '&t=' + Date.now());
+    const j = await res.json();
+    if (j.ok) {
+      pin = inputPin;
+      store.set('pin', pin);
+      if (j.user) {
+        activeOleh = j.user;
+        $('olehLabel').textContent = activeOleh;
+        $('userGreet').textContent = activeOleh;
+        store.set('oleh', activeOleh);
+      }
+      rows = j.rows || [];
+      config = j.config ? normalizeConfig(j.config) : config;
+      store.set('rows', rows);
+      store.set('config', config);
+      setLiveStatus(true, 'Live');
+      showMainApp();
+    } else {
+      $('loginErr').textContent = 'PIN salah! Periksa kembali angka PIN kamu.';
+      $('loginPinInput').select();
+    }
+  } catch (err) {
+    $('loginErr').textContent = 'Gagal terhubung ke server. Periksa koneksi internet.';
+  }
+
+  $('simpanPin').disabled = false;
+  $('simpanPin').textContent = 'Masuk';
+});
+
+$('gantiPin').onclick = () => {
+  pin = '';
+  store.del('pin');
+  store.del('oleh');
+  showLoginScreen('');
+};
 
 function updateTglLabel(){
   const v = $('tanggal').value;
@@ -650,7 +737,6 @@ formatInputRp($('eNominal'));
 formatInputRp($('inTargetNom'));
 formatInputRp($('rNom'));
 
-function bukaPin(){ $('pinBox').hidden = false; $('pinBox').scrollIntoView({ behavior:'smooth', block:'center' }); }
 function toast(msg, bad){ const t = $('toast'); t.textContent = msg; t.style.color = bad ? 'var(--out)' : 'var(--in)'; }
 
 let displayedList = [];
@@ -847,7 +933,7 @@ async function syncRealtime(silent = true){
       if (j.user) {
         activeOleh = j.user;
         $('olehLabel').textContent = activeOleh;
-        if ($('userGreet')) $('userGreet').textContent = activeOleh;
+        $('userGreet').textContent = activeOleh;
         store.set('oleh', activeOleh);
       }
       const nextRows = j.rows || [];
@@ -861,9 +947,9 @@ async function syncRealtime(silent = true){
       }
       setLiveStatus(true, 'Live');
     } else {
-      setLiveStatus(false, 'PIN salah');
-      if (!silent) toast(j.error || 'Gagal memuat data.', true);
-      if (j.error === 'PIN salah') bukaPin();
+      pin = '';
+      store.del('pin');
+      showLoginScreen('Sesi berakhir atau PIN tidak valid. Silakan masuk kembali.');
     }
   } catch(e){
     setLiveStatus(false, 'Offline');
@@ -881,7 +967,7 @@ $('form').addEventListener('submit', async e => {
   e.preventDefault();
   if (!angka($('nominal').value)){ toast('Isi nominal lebih dari 0.', true); return; }
   if (!urlOk){ toast('Alamat Google Sheet belum diisi di kode (SCRIPT_URL).', true); return; }
-  if (!pin){ bukaPin(); toast('Masukkan PIN dulu.', true); return; }
+  if (!pin){ showLoginScreen('Sesi berakhir, masukkan PIN.'); return; }
 
   const jns = jenis();
   let item;
@@ -921,7 +1007,7 @@ $('form').addEventListener('submit', async e => {
     toast('Tersimpan ke Google Sheet.');
     syncRealtime(true);
   } catch(err){
-    if (err.fatal){ toast(err.message + '. Periksa PIN lalu coba lagi.', true); bukaPin(); $('simpan').disabled = false; return; }
+    if (err.fatal){ showLoginScreen(err.message); $('simpan').disabled = false; return; }
     pending.push(item); store.set('pending', pending); toast('Disimpan lokal, akan dikirim saat online.', true);
   }
   $('nominal').value = '';
@@ -978,7 +1064,7 @@ function renderRecurringDue(txBulanIni, blnStr){
     btn.onclick = async () => {
       const rec = config.recurring[Number(btn.dataset.ridx)];
       if (!rec) return;
-      if (!pin){ bukaPin(); toast('Masukkan PIN dulu.', true); return; }
+      if (!pin){ showLoginScreen('Masukkan PIN dulu.'); return; }
       btn.disabled = true;
       btn.textContent = '...';
       const [y, m] = blnStr.split('-').map(Number);
@@ -1353,9 +1439,6 @@ $('btnCsv').onclick = () => {
 
 $('btnPdf').onclick = () => window.print();
 
-$('simpanPin').onclick = () => { pin = $('pin').value.trim(); store.set('pin', pin); $('pinBox').hidden = true; toast('PIN tersimpan.'); syncRealtime(false); };
-$('gantiPin').onclick = () => { $('pin').value = ''; bukaPin(); $('pin').focus(); };
-
 const bulanList = () => { const a = [], d = new Date(); for (let i = 0; i < 6; i++){ const x = new Date(d.getFullYear(), d.getMonth() - i, 1); a.push(x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2,'0')); } return a; };
 const prevBulan = k => { const [y, m] = k.split('-').map(Number); const d = new Date(y, m - 2, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2,'0'); };
 const namaBulan = (k, f) => new Date(k + '-01T00:00:00').toLocaleDateString('id-ID', { month: f, year: f === 'long' ? 'numeric' : undefined });
@@ -1562,8 +1645,41 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('online', () => syncRealtime(false));
 window.addEventListener('offline', () => setLiveStatus(false, 'Offline'));
 
-render();
-syncRealtime(false);
+// === INISIALISASI AWAL (GERBANG UTAMA) ===
+if (!pin) {
+  showLoginScreen();
+} else {
+  // Jika sudah ada PIN tersimpan, langsung verifikasi ke server agar aman
+  fetch(SCRIPT_URL + '?pin=' + encodeURIComponent(pin) + '&t=' + Date.now())
+    .then(res => res.json())
+    .then(j => {
+      if (j.ok) {
+        if (j.user) {
+          activeOleh = j.user;
+          $('olehLabel').textContent = activeOleh;
+          $('userGreet').textContent = activeOleh;
+          store.set('oleh', activeOleh);
+        }
+        rows = j.rows || [];
+        config = j.config ? normalizeConfig(j.config) : config;
+        store.set('rows', rows);
+        store.set('config', config);
+        showMainApp();
+        syncRealtime(false);
+      } else {
+        store.del('pin');
+        showLoginScreen('Sesi atau PIN berubah. Silakan masuk kembali.');
+      }
+    })
+    .catch(() => {
+      // Jika offline saat buka tapi PIN lokal ada, izinkan buka cache lokal
+      if (rows.length > 0) {
+        showMainApp();
+      } else {
+        showLoginScreen('Gagal memuat. Periksa koneksi internet.');
+      }
+    });
+}
 </script>
 </body>
 </html>
