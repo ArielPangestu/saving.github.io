@@ -228,7 +228,7 @@ select#bln{width:auto;min-width:165px;font-weight:600}
         <circle cx="44" cy="36" r="2.5" fill="#E8A33D"/>
       </svg>
       <div>
-        <h1>Catatan Keuangan</h1>
+        <h1>Halo, <span id="userGreet">Ariel</span> 👋</h1>
         <p class="sub"><span id="bulan"></span> · <i class="live-dot" id="liveDot"></i><span id="liveTxt">Live</span></p>
       </div>
     </div>
@@ -559,8 +559,7 @@ function normalizeConfig(raw){
   return c;
 }
 
-// GANTI URL INI DENGAN WEB APP URL DARI GOOGLE SHEET BARU KAMU
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwn0AllEa99eVmt3j2ZkcnAiz_nEDXW-ZII12HJpg7V0mKKaPHRVvrJIXcoUtRTLzxH-g/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvlmqFqakKUSPtsV8hokzeK3Q7_WNUzGcYXlHLtJvmIQDwRbmcgLp72T_MYRCNd5EUJg/exec';
 const urlOk = /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(SCRIPT_URL);
 let pin = store.get('pin', '');
 
@@ -569,6 +568,7 @@ let activeOleh = store.get('oleh', 'Ariel');
 let isPatungan = false;
 let quickHistFilter = 'all';
 $('olehLabel').textContent = activeOleh;
+if ($('userGreet')) $('userGreet').textContent = activeOleh;
 
 const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
 $('tanggal').value = today();
@@ -844,6 +844,12 @@ async function syncRealtime(silent = true){
     const res = await fetch(SCRIPT_URL + '?pin=' + encodeURIComponent(pin) + '&t=' + Date.now());
     const j = await res.json();
     if (j.ok){
+      if (j.user) {
+        activeOleh = j.user;
+        $('olehLabel').textContent = activeOleh;
+        if ($('userGreet')) $('userGreet').textContent = activeOleh;
+        store.set('oleh', activeOleh);
+      }
       const nextRows = j.rows || [];
       const nextCfg = j.config ? normalizeConfig(j.config) : config;
       if (JSON.stringify(nextRows) !== JSON.stringify(rows) || JSON.stringify(nextCfg) !== JSON.stringify(config)) {
