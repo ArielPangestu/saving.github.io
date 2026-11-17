@@ -18,7 +18,8 @@ html{background:var(--bg);-webkit-text-size-adjust:100%}
 body{margin:0;color:var(--ink);font:17px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 
 /* === HALAMAN LOGIN GERBANG UTAMA === */
-.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+.login-screen{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-screen[hidden]{display:none!important}
 .login-card{background:var(--card);width:100%;max-width:400px;border-radius:28px;padding:32px 24px;text-align:center;box-shadow:var(--sh)}
 .login-card svg{margin:0 auto 14px;display:block}
 .login-card h1{margin:0;font-size:1.6rem;letter-spacing:-.02em}
@@ -228,7 +229,7 @@ select#bln{width:auto;min-width:165px;font-weight:600}
 </head>
 <body>
 
-<!-- === HALAMAN LOGIN GERBANG UTAMA (MUNCUL PERTAMA) === -->
+<!-- === HALAMAN LOGIN GERBANG UTAMA === -->
 <section class="login-screen" id="loginScreen">
   <form class="login-card" id="loginForm">
     <svg viewBox="0 0 64 64" width="60" height="60" role="img" aria-label="Dompet">
@@ -246,7 +247,7 @@ select#bln{width:auto;min-width:165px;font-weight:600}
   </form>
 </section>
 
-<!-- === HALAMAN UTAMA APLIKASI (DISEMBUNYIKAN SEBELUM LOGIN BERHASIL) === -->
+<!-- === HALAMAN UTAMA APLIKASI === -->
 <main id="appMain" hidden>
   <header class="top">
     <div class="top-left">
@@ -489,7 +490,7 @@ select#bln{width:auto;min-width:165px;font-weight:600}
   </div>
 </div>
 
-<!-- Modal 3: Multi-Target Tabungan & Pilihan Preset -->
+<!-- Modal 3: Multi-Target Tabungan (Tambah, Pilih, Edit, Hapus) -->
 <div class="modal-bg" id="targetModal" hidden>
   <div class="modal">
     <div class="modal-head">
@@ -498,7 +499,10 @@ select#bln{width:auto;min-width:165px;font-weight:600}
     </div>
     <div id="targetManageList" style="margin-bottom:14px"></div>
     <div style="border-top:1px solid var(--line);padding-top:14px">
-      <h2 style="font-size:1rem">Tambah Target Baru</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <h2 id="targetFormTitle" style="font-size:1rem;margin:0">Tambah Target Baru</h2>
+        <button type="button" class="pill" id="btnBatalEditTarget" hidden>Batal Edit</button>
+      </div>
       <small style="display:block;margin-bottom:8px">Pilih cepat atau ketik nama target sendiri:</small>
       <div class="preset-row" id="targetPresets">
         <button type="button" class="preset-btn" data-p="Dana Darurat">🛡️ Dana Darurat</button>
@@ -585,7 +589,7 @@ function normalizeConfig(raw){
   return c;
 }
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwn0AllEa99eVmt3j2ZkcnAiz_nEDXW-ZII12HJpg7V0mKKaPHRVvrJIXcoUtRTLzxH-g/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvlmqFqakKUSPtsV8hokzeK3Q7_WNUzGcYXlHLtJvmIQDwRbmcgLp72T_MYRCNd5EUJg/exec';
 const urlOk = /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(SCRIPT_URL);
 let pin = store.get('pin', '');
 
@@ -1325,7 +1329,20 @@ $('btnSimpanBudget').onclick = async () => {
   $('btnSimpanBudget').textContent = 'Simpan Anggaran';
 };
 
-// === MULTI-TARGET TABUNGAN & PRESET ===
+// === MULTI-TARGET TABUNGAN (TAMBAH, PILIH, EDIT, HAPUS) ===
+let editingTargetId = null;
+
+function resetTargetForm() {
+  editingTargetId = null;
+  $('targetFormTitle').textContent = 'Tambah Target Baru';
+  $('btnSimpanTarget').textContent = 'Tambah Target';
+  $('btnBatalEditTarget').hidden = true;
+  $('inTargetNama').value = '';
+  $('inTargetNom').value = '';
+}
+
+$('btnBatalEditTarget').onclick = resetTargetForm;
+
 function renderTargetManage(){
   const list = config.targets || [];
   $('targetManageList').innerHTML = list.length ? list.map(t => `
@@ -1334,24 +1351,48 @@ function renderTargetManage(){
         <strong>${esc(t.nama)}</strong> ${t.id === config.activeTargetId ? '<span class="badge split-b">Aktif</span>' : ''}
         <small style="display:block;color:var(--mute)">Target: ${rp(t.nominal)}</small>
       </div>
-      <div style="display:flex;gap:6px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
         ${t.id !== config.activeTargetId ? `<button type="button" class="pill" data-selt="${t.id}">Pilih</button>` : ''}
+        <button type="button" class="pill" data-editt="${t.id}">Edit</button>
         <button type="button" class="pill" style="color:var(--out)" data-delt="${t.id}">Hapus</button>
       </div>
     </div>
   `).join('') : '<p class="empty">Belum ada target tabungan.</p>';
 
   document.querySelectorAll('[data-selt]').forEach(b => {
+    b.onclick = async () => {
+      const nextConfig = { ...config, activeTargetId: b.dataset.selt };
+      b.disabled = true;
+      try {
+        await kirim({ action: 'saveConfig', config: nextConfig });
+        config = nextConfig;
+        store.set('config', config);
+        renderTargetManage();
+        render();
+      } catch (err) {
+        alert(err.message || 'Gagal mengganti target aktif.');
+        b.disabled = false;
+      }
+    };
+  });
+
+  document.querySelectorAll('[data-editt]').forEach(b => {
     b.onclick = () => {
-      config.activeTargetId = b.dataset.selt;
-      store.set('config', config);
-      renderTargetManage();
-      render();
+      const t = (config.targets || []).find(x => x.id === b.dataset.editt);
+      if (!t) return;
+      editingTargetId = t.id;
+      $('targetFormTitle').textContent = 'Ubah Target Tabungan';
+      $('btnSimpanTarget').textContent = 'Simpan Perubahan';
+      $('btnBatalEditTarget').hidden = false;
+      $('inTargetNama').value = t.nama;
+      $('inTargetNom').value = 'Rp ' + Number(t.nominal).toLocaleString('id-ID');
+      $('inTargetNama').focus();
     };
   });
 
   document.querySelectorAll('[data-delt]').forEach(b => {
     b.onclick = async () => {
+      if (!confirm('Hapus target tabungan ini?')) return;
       const nextTargets = (config.targets || []).filter(x => x.id !== b.dataset.delt);
       const nextActive = nextTargets.length ? nextTargets[0].id : '';
       const nextConfig = { ...config, targets: nextTargets, activeTargetId: nextActive };
@@ -1360,6 +1401,7 @@ function renderTargetManage(){
         await kirim({ action: 'saveConfig', config: nextConfig });
         config = nextConfig;
         store.set('config', config);
+        if (editingTargetId === b.dataset.delt) resetTargetForm();
         renderTargetManage();
         render();
       } catch (err) { alert(err.message || 'Gagal menghapus target.'); b.disabled = false; }
@@ -1375,36 +1417,51 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
 });
 
 $('btnTarget').onclick = () => {
-  $('inTargetNama').value = '';
-  $('inTargetNom').value = '';
+  resetTargetForm();
   renderTargetManage();
   $('targetModal').hidden = false;
 };
-$('closeTarget').onclick = () => $('targetModal').hidden = true;
+$('closeTarget').onclick = () => {
+  resetTargetForm();
+  $('targetModal').hidden = true;
+};
 
 $('btnSimpanTarget').onclick = async () => {
   const nama = $('inTargetNama').value.trim();
   const nominal = angka($('inTargetNom').value);
   if (!nama || !nominal) { alert('Isi nama target dan nominal lebih dari 0.'); return; }
-  const id = 't_' + Date.now();
-  const nextTargets = [...(config.targets || []), { id, nama, nominal }];
-  const nextConfig = { ...config, targets: nextTargets, activeTargetId: id };
+
+  let nextTargets;
+  let nextActiveId = config.activeTargetId;
+
+  if (editingTargetId) {
+    nextTargets = (config.targets || []).map(t =>
+      t.id === editingTargetId ? { ...t, nama, nominal } : t
+    );
+  } else {
+    const id = 't_' + Date.now();
+    nextTargets = [...(config.targets || []), { id, nama, nominal }];
+    nextActiveId = id;
+  }
+
+  const nextConfig = { ...config, targets: nextTargets, activeTargetId: nextActiveId };
+  const isEdit = !!editingTargetId;
+
   $('btnSimpanTarget').disabled = true;
   $('btnSimpanTarget').textContent = 'Menyimpan...';
   try {
     await kirim({ action: 'saveConfig', config: nextConfig });
     config = nextConfig;
     store.set('config', config);
-    $('inTargetNama').value = '';
-    $('inTargetNom').value = '';
+    resetTargetForm();
     renderTargetManage();
     render();
-    toast('Target tabungan ditambahkan.');
+    toast(isEdit ? 'Target tabungan diperbarui.' : 'Target tabungan ditambahkan.');
   } catch (err) {
     alert(err.message || 'Gagal menyimpan target.');
   }
   $('btnSimpanTarget').disabled = false;
-  $('btnSimpanTarget').textContent = 'Tambah Target';
+  $('btnSimpanTarget').textContent = editingTargetId ? 'Simpan Perubahan' : 'Tambah Target';
 };
 
 // === EKSPOR CSV & PDF ===
@@ -1649,7 +1706,6 @@ window.addEventListener('offline', () => setLiveStatus(false, 'Offline'));
 if (!pin) {
   showLoginScreen();
 } else {
-  // Jika sudah ada PIN tersimpan, langsung verifikasi ke server agar aman
   fetch(SCRIPT_URL + '?pin=' + encodeURIComponent(pin) + '&t=' + Date.now())
     .then(res => res.json())
     .then(j => {
@@ -1672,7 +1728,6 @@ if (!pin) {
       }
     })
     .catch(() => {
-      // Jika offline saat buka tapi PIN lokal ada, izinkan buka cache lokal
       if (rows.length > 0) {
         showMainApp();
       } else {
