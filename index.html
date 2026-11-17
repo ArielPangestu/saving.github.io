@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Keuangan">
 <title>Catatan Keuangan</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%90%B7%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%91%9B%3C/text%3E%3C/svg%3E">
 <style>
 :root{--bg:#F2F2F7;--card:#fff;--ink:#1C1C1E;--mute:#6C6C70;--line:#E5E5EA;--fill:#EFEFF4;--in:#1F8A3E;--out:#D70015;--warn:#D97706;--trf:#0A84FF;--hero:#0F3D3E;--herofg:#fff;--tab:rgba(249,249,251,.86);--sh:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05)}
 @media (prefers-color-scheme:dark){:root{--bg:#000;--card:#1C1C1E;--ink:#fff;--mute:#9A9AA0;--line:#38383A;--fill:#2C2C2E;--in:#32D74B;--out:#FF6961;--warn:#FBBF24;--trf:#64D2FF;--hero:#E8A33D;--herofg:#1C1C1E;--tab:rgba(28,28,30,.86);--sh:none}}
@@ -16,10 +16,15 @@
 html{background:var(--bg);-webkit-text-size-adjust:100%}
 body{margin:0;color:var(--ink);font:17px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 main{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(96px + env(safe-area-inset-bottom,0px))}
-.top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-.top h1{margin:0;font-size:1.9rem;line-height:1.1;letter-spacing:-.02em;font-weight:700}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.top-left{display:flex;align-items:center;gap:12px}
+.top h1{margin:0;font-size:1.85rem;line-height:1.1;letter-spacing:-.02em;font-weight:700}
 .sub{color:var(--mute);font-size:.95rem;margin:2px 0 0}
 .logo{flex:none}
+.sync-btn{background:var(--card);border:0;width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;box-shadow:var(--sh);flex:none}
+.sync-btn:active{transform:scale(.94)}
+.sync-btn.spin svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 .saldo{background:var(--hero);color:var(--herofg);border-radius:24px;padding:22px 22px 24px;margin-bottom:12px;box-shadow:var(--sh)}
 .saldo small{opacity:.82;font-size:.88rem;display:block}
 .saldo b{display:block;font-size:2.5rem;letter-spacing:-.03em;line-height:1.15;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
@@ -84,7 +89,7 @@ li b{white-space:nowrap;font-weight:600;font-variant-numeric:tabular-nums}
 .split{display:flex;height:12px;border-radius:7px;overflow:hidden;background:var(--fill);margin:8px 0}
 .split i{display:block;height:100%;transition:width .3s}
 
-/* === DASHBOARD UPGRADE === */
+/* === DASHBOARD === */
 .dash-hero{background:var(--hero);color:var(--herofg);border-radius:22px;padding:18px;margin-top:14px}
 .dash-hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .dash-hero small{opacity:.8;font-size:.82rem;display:block}
@@ -114,7 +119,7 @@ li b{white-space:nowrap;font-weight:600;font-variant-numeric:tabular-nums}
 .ins-item span{font-size:.76rem;color:var(--mute);display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ins-full{grid-column:1 / -1;display:flex;justify-content:space-between;align-items:center}
 
-/* Trend Chart Upgraded */
+/* Trend Chart */
 .trend{display:flex;gap:8px;height:165px;margin:12px 0 6px;padding-top:18px}
 .trend .m{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;padding:4px 2px;border-radius:10px}
 .trend .m.active{background:var(--fill)}
@@ -130,15 +135,22 @@ li b{white-space:nowrap;font-weight:600;font-variant-numeric:tabular-nums}
 
 select#bln{width:auto;min-width:165px;font-weight:600}
 
-/* Kartu Tabungan & Target */
+/* Kartu Tabungan & Multi-Target */
 .save-card{background:var(--card);border-radius:20px;padding:16px 18px;margin-bottom:12px;box-shadow:var(--sh)}
 .save-top{display:flex;justify-content:space-between;align-items:flex-start}
 .save-top small{color:var(--mute);font-size:.82rem;display:block}
 .save-top b{font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums}
 .save-prog{margin-top:12px;padding-top:10px;border-top:.5px solid var(--line)}
-.save-prog .t{display:flex;justify-content:space-between;font-size:.82rem;color:var(--mute);margin-bottom:6px}
+.save-prog .t{display:flex;justify-content:space-between;font-size:.84rem;font-weight:600;margin-bottom:6px}
 .save-prog .tr{height:8px;background:var(--fill);border-radius:6px;overflow:hidden}
-.save-prog .tr i{display:block;height:100%;background:var(--in);border-radius:6px}
+.save-prog .tr i{display:block;height:100%;background:var(--in);border-radius:6px;transition:width .3s}
+.target-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;scrollbar-width:none}
+.target-chips::-webkit-scrollbar{display:none}
+.t-chip{padding:5px 11px;border-radius:99px;border:1px solid var(--line);background:var(--fill);color:var(--mute);font-size:.78rem;font-weight:600;white-space:nowrap;cursor:pointer}
+.t-chip.on{background:var(--hero);color:var(--herofg);border-color:var(--hero)}
+.preset-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.preset-btn{padding:6px 11px;border-radius:10px;border:0;background:var(--fill);color:var(--ink);font-size:.8rem;font-weight:500;cursor:pointer}
+.preset-btn:active{opacity:.7}
 
 /* Toggle Patungan */
 .chk-box{display:flex;align-items:center;justify-content:space-between;background:var(--fill);padding:12px 14px;border-radius:12px;margin-bottom:14px;cursor:pointer}
@@ -163,13 +175,13 @@ select#bln{width:auto;min-width:165px;font-weight:600}
 .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .modal-head h2{margin:0}
 .close-btn{background:var(--fill);border:0;width:32px;height:32px;border-radius:50%;color:var(--mute);font-size:18px;font-weight:700;cursor:pointer}
-.rec-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:.5px solid var(--line)}
+.rec-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:.5px solid var(--line);gap:8px}
 .rec-item:last-child{border-bottom:0}
 
 /* Print / Ekspor PDF */
 @media print {
   body{background:#fff;color:#000}
-  .tabs,#tCatat,#btnTarget,#btnBudget,.export-btns,#gantiPin,#pinBox,.pill{display:none!important}
+  .tabs,#tCatat,#btnTarget,#btnBudget,.export-btns,#gantiPin,#pinBox,.pill,.sync-btn{display:none!important}
   #tDash{display:block!important}
   main{max-width:100%;padding:0}
   .saldo,.save-card,.mini,.panel,.dash-hero{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
@@ -179,29 +191,31 @@ select#bln{width:auto;min-width:165px;font-weight:600}
 <body>
 <main>
   <header class="top">
-    <svg class="logo" viewBox="0 0 64 64" width="48" height="48" role="img" aria-label="Celengan">
-      <circle cx="30" cy="9" r="6" fill="#E8A33D" stroke="#12343B" stroke-width="1.5"/>
-      <path d="M10 38q-7-2-5-9" fill="none" stroke="#E8A33D" stroke-width="3" stroke-linecap="round"/>
-      <path d="M42 26l7-8 2 11z" fill="#E8A33D"/>
-      <ellipse cx="30" cy="39" rx="21" ry="15" fill="#E8A33D"/>
-      <rect x="47" y="34" width="10" height="10" rx="3" fill="#D68F2B"/>
-      <rect x="18" y="50" width="7" height="9" rx="2" fill="#D68F2B"/>
-      <rect x="36" y="50" width="7" height="9" rx="2" fill="#D68F2B"/>
-      <circle cx="42" cy="34" r="2" fill="#12343B"/>
-      <path d="M23 27h13" stroke="#12343B" stroke-width="2.5" stroke-linecap="round"/>
-    </svg>
-    <div><h1>Catatan Keuangan</h1><p class="sub" id="bulan"></p></div>
+    <div class="top-left">
+      <svg class="logo" viewBox="0 0 64 64" width="46" height="46" role="img" aria-label="Dompet">
+        <rect x="8" y="14" width="44" height="36" rx="9" fill="#D68F2B"/>
+        <rect x="8" y="20" width="46" height="32" rx="9" fill="#E8A33D"/>
+        <path d="M16 14h28a6 6 0 0 1 6 6H10a6 6 0 0 1 6-6z" fill="#12343B" opacity=".18"/>
+        <rect x="38" y="30" width="18" height="12" rx="6" fill="#0F3D3E"/>
+        <circle cx="44" cy="36" r="2.5" fill="#E8A33D"/>
+      </svg>
+      <div><h1>Catatan Keuangan</h1><p class="sub" id="bulan"></p></div>
+    </div>
+    <button type="button" class="sync-btn" id="btnRefresh" title="Sinkronkan ulang" aria-label="Sinkronkan ulang">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+    </button>
   </header>
 
   <div class="saldo"><small>Saldo bulan ini</small><b id="saldo">Rp 0</b></div>
 
-  <!-- Total Tabungan & Target -->
+  <!-- Total Tabungan & Multi-Target -->
   <div class="save-card">
     <div class="save-top">
       <div><small>Total tabungan (seluruh bulan)</small><b id="totalSaldo">Rp 0</b></div>
-      <button type="button" class="pill" id="btnTarget">Atur Target</button>
+      <button type="button" class="pill" id="btnTarget">+ Target</button>
     </div>
     <div class="save-prog" id="targetBox" hidden>
+      <div class="target-chips" id="targetChips"></div>
       <div class="t"><span id="targetNama">Target Tabungan</span><span id="targetPct">0%</span></div>
       <div class="tr"><i id="targetBar" style="width:0%"></i></div>
       <small id="targetDetail" style="display:block;margin-top:5px"></small>
@@ -218,7 +232,7 @@ select#bln{width:auto;min-width:165px;font-weight:600}
 
   <div class="pair" id="perOrang"></div>
 
-  <nav class="tabs"><button type="button" class="on" data-t="catat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Catat</button><button type="button" data-t="dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 20v-9M12 20V4M19 20v-6"/></svg>Dashboard</button></nav>
+  <nav class="tabs"><button type="button" class="on" data-t="catat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Catat</button><button type="button" class="on-dash" data-t="dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 20v-9M12 20V4M19 20v-6"/></svg>Dashboard</button></nav>
 
   <section id="tCatat">
   <!-- Pengingat Tagihan Rutin Bulan Ini -->
@@ -290,9 +304,8 @@ select#bln{width:auto;min-width:165px;font-weight:600}
   </div>
   </section>
 
-  <!-- === DASHBOARD BARU === -->
+  <!-- === DASHBOARD === -->
   <section id="tDash" hidden>
-    <!-- 1. Kontrol Bulan, Ekspor & Hero Ringkasan -->
     <div class="panel">
       <div class="head-row" style="margin-bottom:0">
         <select id="bln" aria-label="Pilih Bulan"></select>
@@ -304,13 +317,11 @@ select#bln{width:auto;min-width:165px;font-weight:600}
       <div id="dHero"></div>
     </div>
 
-    <!-- 2. Insight Otomatis Bulan Ini -->
     <div class="panel">
       <h2>Sorotan Bulan Ini</h2>
       <div id="dInsight"></div>
     </div>
 
-    <!-- 3. Donut Chart & Anggaran per Kategori -->
     <div class="panel">
       <div class="head-row">
         <h2>Kategori & Anggaran</h2>
@@ -320,19 +331,16 @@ select#bln{width:auto;min-width:165px;font-weight:600}
       <div id="dKat"></div>
     </div>
 
-    <!-- 4. Patungan Ariel & Poppy -->
     <div class="panel">
       <h2>Patungan Ariel & Poppy</h2>
       <div id="dPatungan"></div>
     </div>
 
-    <!-- 5. Kontribusi Ariel vs Poppy -->
     <div class="panel">
       <h2>Perbandingan Ariel & Poppy</h2>
       <div id="dOrang"></div>
     </div>
 
-    <!-- 6. Tren 6 Bulan -->
     <div class="panel">
       <div class="head-row">
         <h2>Tren 6 Bulan</h2>
@@ -398,16 +406,29 @@ select#bln{width:auto;min-width:165px;font-weight:600}
   </div>
 </div>
 
-<!-- Modal 3: Atur Target Tabungan -->
+<!-- Modal 3: Multi-Target Tabungan & Pilihan Preset -->
 <div class="modal-bg" id="targetModal" hidden>
   <div class="modal">
     <div class="modal-head">
-      <h2>Target Tabungan Bersama</h2>
+      <h2>Pilihan Target Tabungan</h2>
       <button type="button" class="close-btn" id="closeTarget">&times;</button>
     </div>
-    <label class="f">Nama Target (misal: Dana Darurat, Liburan)<input type="text" id="inTargetNama" placeholder="Dana Darurat"></label>
-    <label class="f">Nominal Target (isi 0 untuk sembunyikan bar)<input type="text" id="inTargetNom" inputmode="numeric" placeholder="Rp 10.000.000"></label>
-    <button type="button" class="main" id="btnSimpanTarget">Simpan Target</button>
+    <div id="targetManageList" style="margin-bottom:14px"></div>
+    <div style="border-top:1px solid var(--line);padding-top:14px">
+      <h2 style="font-size:1rem">Tambah Target Baru</h2>
+      <small style="display:block;margin-bottom:8px">Pilih cepat atau ketik nama target sendiri:</small>
+      <div class="preset-row" id="targetPresets">
+        <button type="button" class="preset-btn" data-p="Dana Darurat">🛡️ Dana Darurat</button>
+        <button type="button" class="preset-btn" data-p="Liburan">✈️ Liburan</button>
+        <button type="button" class="preset-btn" data-p="Nikah / Acara">💍 Nikah / Acara</button>
+        <button type="button" class="preset-btn" data-p="DP Rumah">🏠 DP Rumah</button>
+        <button type="button" class="preset-btn" data-p="Kendaraan">🛵 Kendaraan</button>
+        <button type="button" class="preset-btn" data-p="Gadget">📱 Gadget</button>
+      </div>
+      <label class="f">Nama Target<input type="text" id="inTargetNama" placeholder="Contoh: Dana Darurat"></label>
+      <label class="f">Nominal Target<input type="text" id="inTargetNom" inputmode="numeric" placeholder="Rp 10.000.000"></label>
+      <button type="button" class="main" id="btnSimpanTarget">Tambah Target</button>
+    </div>
   </div>
 </div>
 
@@ -463,7 +484,23 @@ const store = {
 };
 let rows = store.get('rows', []);
 let pending = store.get('pending', []);
-let config = store.get('config', { budgets: {}, target: { nama: 'Target Tabungan', nominal: 0 }, recurring: [] });
+let config = normalizeConfig(store.get('config', {}));
+
+function normalizeConfig(raw){
+  const c = { budgets: {}, targets: [], activeTargetId: '', recurring: [], ...(raw || {}) };
+  // Migrasi otomatis jika sebelumnya pakai format target tunggal
+  if (c.target && Number(c.target.nominal) > 0 && (!c.targets || !c.targets.length)) {
+    const id = 't_' + Date.now();
+    c.targets = [{ id, nama: c.target.nama || 'Target Tabungan', nominal: Number(c.target.nominal) }];
+    c.activeTargetId = id;
+    delete c.target;
+  }
+  if (!Array.isArray(c.targets)) c.targets = [];
+  if (c.targets.length && !c.targets.some(t => t.id === c.activeTargetId)) {
+    c.activeTargetId = c.targets[0].id;
+  }
+  return c;
+}
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxL5qKfG-EVhzwInXgE1aKrzb_eNuaglQW5MD0UnhH8flmflw1Z0kJ-m32QMqYDf5Sz/exec';
 const urlOk = /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(SCRIPT_URL);
@@ -546,22 +583,36 @@ function render(){
     `<div class="mini"><small>${d}</small><b>${rp(wBal[d] || 0)}</b></div>`
   ).join('');
 
+  // Total Tabungan & Multi-Target
   const totalInAll = allRows.filter(r => r.jenis === 'Pemasukan').reduce((a,r) => a + Number(r.nominal), 0);
   const totalOutAll = allRows.filter(r => r.jenis === 'Pengeluaran').reduce((a,r) => a + Number(r.nominal), 0);
   const totalTabungan = totalInAll - totalOutAll;
   $('totalSaldo').textContent = rp(totalTabungan);
 
-  const tgt = config.target || { nama: 'Target Tabungan', nominal: 0 };
-  if (Number(tgt.nominal) > 0) {
+  const targets = config.targets || [];
+  if (targets.length > 0) {
     $('targetBox').hidden = false;
-    $('targetNama').textContent = tgt.nama || 'Target Tabungan';
-    const pct = Math.max(0, Math.min(100, Math.round((totalTabungan / Number(tgt.nominal)) * 100)));
+    $('targetChips').innerHTML = targets.map(t =>
+      `<button type="button" class="t-chip ${t.id === config.activeTargetId ? 'on' : ''}" data-tid="${t.id}">${esc(t.nama)}</button>`
+    ).join('');
+    document.querySelectorAll('.t-chip').forEach(ch => {
+      ch.onclick = () => {
+        config.activeTargetId = ch.dataset.tid;
+        store.set('config', config);
+        render();
+      };
+    });
+
+    const activeT = targets.find(t => t.id === config.activeTargetId) || targets[0];
+    $('targetNama').textContent = activeT.nama;
+    const nomT = Number(activeT.nominal) || 1;
+    const pct = Math.max(0, Math.min(100, Math.round((totalTabungan / nomT) * 100)));
     $('targetPct').textContent = pct + '%';
     $('targetBar').style.width = pct + '%';
-    const kurang = Math.max(0, Number(tgt.nominal) - totalTabungan);
+    const kurang = Math.max(0, nomT - totalTabungan);
     $('targetDetail').textContent = kurang > 0
-      ? `Terkumpul ${rp(Math.max(0, totalTabungan))} dari ${rp(tgt.nominal)} (kurang ${rp(kurang)})`
-      : `Target ${rp(tgt.nominal)} tercapai!`;
+      ? `Terkumpul ${rp(Math.max(0, totalTabungan))} dari ${rp(nomT)} (kurang ${rp(kurang)})`
+      : `Target ${rp(nomT)} tercapai! 🎉`;
   } else {
     $('targetBox').hidden = true;
   }
@@ -642,11 +693,13 @@ async function flush(){
 
 async function muat(){
   if (!urlOk || !pin) return;
+  $('btnRefresh').classList.add('spin');
   try {
-    const res = await fetch(SCRIPT_URL + '?pin=' + encodeURIComponent(pin)); const j = await res.json();
+    const res = await fetch(SCRIPT_URL + '?pin=' + encodeURIComponent(pin));
+    const j = await res.json();
     if (j.ok){
       rows = j.rows || [];
-      if (j.config) config = { budgets: {}, target: { nama: 'Target Tabungan', nominal: 0 }, recurring: [], ...j.config };
+      if (j.config) config = normalizeConfig(j.config);
       store.set('rows', rows);
       store.set('config', config);
       render();
@@ -655,7 +708,14 @@ async function muat(){
       if (j.error === 'PIN salah') bukaPin();
     }
   } catch(e){}
+  $('btnRefresh').classList.remove('spin');
 }
+
+$('btnRefresh').onclick = async () => {
+  await flush();
+  await muat();
+  toast('Data disinkronkan dengan Google Sheet.');
+};
 
 $('form').addEventListener('submit', async e => {
   e.preventDefault();
@@ -847,6 +907,7 @@ $('btnTambahRec').onclick = async () => {
   $('btnTambahRec').textContent = 'Simpan Tagihan Rutin';
 };
 
+// === EDIT & HAPUS TRANSAKSI (DENGAN AUTO-SYNC ROWINDEX) ===
 let activeTx = null;
 function isiKategoriEdit(jns, selectedKat){
   const targetJns = jns === 'Transfer' ? 'Pengeluaran' : jns;
@@ -855,6 +916,24 @@ function isiKategoriEdit(jns, selectedKat){
   if (jns !== 'Pengeluaran') $('ePatungan').checked = false;
 }
 document.querySelectorAll('input[name=eJenis]').forEach(r => r.addEventListener('change', () => isiKategoriEdit(r.value, '')));
+
+async function ensureRowIndex(tx){
+  if (tx.rowIndex) return tx.rowIndex;
+  const snap = JSON.stringify({
+    t: tx.tanggal, j: tx.jenis, k: tx.kategori,
+    n: Number(tx.nominal), c: tx.catatan || '', o: tx.oleh || ''
+  });
+  await muat();
+  const found = rows.find(r => JSON.stringify({
+    t: r.tanggal, j: r.jenis, k: r.kategori,
+    n: Number(r.nominal), c: r.catatan || '', o: r.oleh || ''
+  }) === snap);
+  if (found && found.rowIndex) {
+    tx.rowIndex = found.rowIndex;
+    return found.rowIndex;
+  }
+  return null;
+}
 
 $('list').addEventListener('click', e => {
   const li = e.target.closest('li[data-idx]');
@@ -905,15 +984,14 @@ $('btnSimpanEdit').onclick = async () => {
     return;
   }
 
-  if (!activeTx.rowIndex) {
-    alert('Data sedang disinkronkan. Tunggu sebentar atau muat ulang halaman.');
-    return;
-  }
-
   $('btnSimpanEdit').disabled = true;
   $('btnSimpanEdit').textContent = 'Menyimpan...';
   try {
-    await kirim({ action: 'edit', rowIndex: activeTx.rowIndex, ...updated });
+    const rIdx = await ensureRowIndex(activeTx);
+    if (!rIdx) {
+      throw new Error('Baris transaksi tidak ditemukan di Google Sheet. Pastikan Code.gs sudah di-deploy versi terbaru.');
+    }
+    await kirim({ action: 'edit', rowIndex: rIdx, ...updated });
     Object.assign(activeTx, updated);
     store.set('rows', rows);
     $('editModal').hidden = true;
@@ -939,15 +1017,14 @@ $('btnHapusTx').onclick = async () => {
     return;
   }
 
-  if (!activeTx.rowIndex) {
-    alert('Data belum memiliki nomor baris. Muat ulang halaman lalu coba lagi.');
-    return;
-  }
-
   $('btnHapusTx').disabled = true;
   $('btnHapusTx').textContent = 'Menghapus...';
   try {
-    await kirim({ action: 'delete', rowIndex: activeTx.rowIndex });
+    const rIdx = await ensureRowIndex(activeTx);
+    if (!rIdx) {
+      throw new Error('Baris transaksi tidak ditemukan di Google Sheet. Pastikan Code.gs sudah di-deploy versi terbaru.');
+    }
+    await kirim({ action: 'delete', rowIndex: rIdx });
     $('editModal').hidden = true;
     toast('Transaksi dihapus dari Google Sheet.');
     await muat();
@@ -958,6 +1035,7 @@ $('btnHapusTx').onclick = async () => {
   $('btnHapusTx').textContent = 'Hapus Transaksi';
 };
 
+// === ANGGARAN PER KATEGORI ===
 $('btnBudget').onclick = () => {
   const b = config.budgets || {};
   $('budgetInputs').innerHTML = KAT.Pengeluaran.map(k => {
@@ -992,34 +1070,89 @@ $('btnSimpanBudget').onclick = async () => {
   $('btnSimpanBudget').textContent = 'Simpan Anggaran';
 };
 
+// === MULTI-TARGET TABUNGAN & PRESET ===
+function renderTargetManage(){
+  const list = config.targets || [];
+  $('targetManageList').innerHTML = list.length ? list.map(t => `
+    <div class="rec-item">
+      <div>
+        <strong>${esc(t.nama)}</strong> ${t.id === config.activeTargetId ? '<span class="badge split-b">Aktif</span>' : ''}
+        <small style="display:block;color:var(--mute)">Target: ${rp(t.nominal)}</small>
+      </div>
+      <div style="display:flex;gap:6px">
+        ${t.id !== config.activeTargetId ? `<button type="button" class="pill" data-selt="${t.id}">Pilih</button>` : ''}
+        <button type="button" class="pill" style="color:var(--out)" data-delt="${t.id}">Hapus</button>
+      </div>
+    </div>
+  `).join('') : '<p class="empty">Belum ada target tabungan.</p>';
+
+  document.querySelectorAll('[data-selt]').forEach(b => {
+    b.onclick = () => {
+      config.activeTargetId = b.dataset.selt;
+      store.set('config', config);
+      renderTargetManage();
+      render();
+    };
+  });
+
+  document.querySelectorAll('[data-delt]').forEach(b => {
+    b.onclick = async () => {
+      const nextTargets = (config.targets || []).filter(x => x.id !== b.dataset.delt);
+      const nextActive = nextTargets.length ? nextTargets[0].id : '';
+      const nextConfig = { ...config, targets: nextTargets, activeTargetId: nextActive };
+      b.disabled = true;
+      try {
+        await kirim({ action: 'saveConfig', config: nextConfig });
+        config = nextConfig;
+        store.set('config', config);
+        renderTargetManage();
+        render();
+      } catch (err) { alert(err.message || 'Gagal menghapus target.'); b.disabled = false; }
+    };
+  });
+}
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.onclick = () => {
+    $('inTargetNama').value = btn.dataset.p;
+    $('inTargetNom').focus();
+  };
+});
+
 $('btnTarget').onclick = () => {
-  const t = config.target || { nama: 'Target Tabungan', nominal: 0 };
-  $('inTargetNama').value = t.nama || '';
-  $('inTargetNom').value = t.nominal ? 'Rp ' + Number(t.nominal).toLocaleString('id-ID') : '';
+  $('inTargetNama').value = '';
+  $('inTargetNom').value = '';
+  renderTargetManage();
   $('targetModal').hidden = false;
 };
 $('closeTarget').onclick = () => $('targetModal').hidden = true;
 
 $('btnSimpanTarget').onclick = async () => {
-  const nama = $('inTargetNama').value.trim() || 'Target Tabungan';
+  const nama = $('inTargetNama').value.trim();
   const nominal = angka($('inTargetNom').value);
-  const nextConfig = { ...config, target: { nama, nominal } };
+  if (!nama || !nominal) { alert('Isi nama target dan nominal lebih dari 0.'); return; }
+  const id = 't_' + Date.now();
+  const nextTargets = [...(config.targets || []), { id, nama, nominal }];
+  const nextConfig = { ...config, targets: nextTargets, activeTargetId: id };
   $('btnSimpanTarget').disabled = true;
   $('btnSimpanTarget').textContent = 'Menyimpan...';
   try {
     await kirim({ action: 'saveConfig', config: nextConfig });
     config = nextConfig;
     store.set('config', config);
-    $('targetModal').hidden = true;
+    $('inTargetNama').value = '';
+    $('inTargetNom').value = '';
+    renderTargetManage();
     render();
-    toast('Target tabungan disimpan.');
+    toast('Target tabungan ditambahkan.');
   } catch (err) {
     alert(err.message || 'Gagal menyimpan target.');
   }
   $('btnSimpanTarget').disabled = false;
-  $('btnSimpanTarget').textContent = 'Simpan Target';
+  $('btnSimpanTarget').textContent = 'Tambah Target';
 };
 
+// === EKSPOR CSV & PDF ===
 $('btnCsv').onclick = () => {
   const bln = $('bln').value;
   const all = [...rows, ...pending];
@@ -1080,7 +1213,6 @@ function renderDash(){
   const inn = m.filter(r => r.jenis === 'Pemasukan'), out = m.filter(r => r.jenis === 'Pengeluaran');
   const tin = sum(inn), tout = sum(out), saldo = tin - tout;
 
-  // 1. Hero Card + Saving Rate + Perbandingan Bulan Lalu
   const saveRate = tin > 0 ? Math.round((saldo / tin) * 100) : 0;
   let rateLabel = 'Belum ada pemasukan';
   if (tin > 0) {
@@ -1111,7 +1243,6 @@ function renderDash(){
       </div>
     </div>`;
 
-  // 2. Sorotan / Insight Bulan Ini
   const [yr, mo] = curK.split('-').map(Number);
   const isCurrentMonth = (curK === today().slice(0,7));
   const daysElapsed = isCurrentMonth ? Math.max(1, new Date().getDate()) : new Date(yr, mo, 0).getDate();
@@ -1146,7 +1277,6 @@ function renderDash(){
       </div>` : ''}
     </div>`;
 
-  // 3. Donut Chart SVG + Anggaran per Kategori
   const colorMap = {};
   KAT.Pengeluaran.forEach((k, idx) => colorMap[k] = PALETTE[idx % PALETTE.length]);
 
@@ -1202,7 +1332,6 @@ function renderDash(){
     }
   }).join('') : '<p class="empty">Belum ada pengeluaran atau anggaran di bulan ini.</p>';
 
-  // 4. Patungan Ariel & Poppy
   const shared = out.filter(r => r.patungan);
   const patA = sum(shared.filter(r => r.oleh === 'Ariel'));
   const patP = sum(shared.filter(r => r.oleh === 'Poppy'));
@@ -1224,7 +1353,6 @@ function renderDash(){
     $('dPatungan').innerHTML = '<p class="empty">Belum ada transaksi yang ditandai sebagai patungan di bulan ini.</p>';
   }
 
-  // 5. Perbandingan Ariel & Poppy
   $('dOrang').innerHTML = `
     <div class="person-row">
       <span class="p-tag"><i class="avatar" style="background:#3A7CA5">A</i>Ariel</span>
@@ -1234,7 +1362,6 @@ function renderDash(){
     ${splitRow('Pengeluaran', out)}
   `;
 
-  // 6. Tren 6 Bulan
   const data = list.slice().reverse().map(k => {
     const x = inMonth(all, k);
     return { k, i: sum(x.filter(r => r.jenis === 'Pemasukan')), o: sum(x.filter(r => r.jenis === 'Pengeluaran')) };
