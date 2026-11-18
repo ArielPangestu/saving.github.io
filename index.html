@@ -918,13 +918,14 @@ function normalizeConfig(raw){
   return c;
 }
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLoHtmMjvOx97LlqhACt7DZTped7BCcuADm3Wuch6ZQ4zVxTdwPebLd1NkKoQG0cRmDg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwiaOeS2CbF6FFRZ9Aq1E-JQ3QXN7KK7gWBUyHuP3i9OtOLjH8aV_BA4Co_ybUaRxgyMg/exec';
 const urlOk = /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(SCRIPT_URL);
 let pin = store.get('pin', '');
 
 const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 const isTab = r => r.jenis === 'Setor' || r.jenis === 'Tarik';
 let dataVersion = store.get('ver', '');
+let inflight = 0;
 const targetName = id => { const t = (config.targets || []).find(x => x.id === id); return t ? t.nama : '(target dihapus)'; };
 const katLabel = r => isTab(r) ? (r.jenis + ' · ' + targetName(r.kategori)) : r.kategori;
 const savedOf = id => [...rows, ...pending].reduce((a, r) => (isTab(r) && r.kategori === id) ? a + (r.jenis === 'Setor' ? 1 : -1) * (Number(r.nominal) || 0) : a, 0);
@@ -1215,6 +1216,54 @@ async function muat(pinTry, since){
   return await res.json();
 }
 
+// Layar diubah dulu, server menyusul di belakang layar. Kalau gagal, dikembalikan.
+function simpanOptimis(item, okMsg){
+  rows.push(item);
+  store.set('rows', rows);
+  inflight++;
+  render();
+  toast('Menyimpan...');
+  kirim({ action: 'add', ...item })
+    .then(() => toast(okMsg))
+    .catch(err => {
+      rows = rows.filter(x => x !== item);
+      store.set('rows', rows);
+      if (err.fatal) {
+        render();
+        toast('Gagal menyimpan.', true);
+        if (/PIN/i.test(err.message || '')) showLoginScreen(err.message);
+        else alert(err.message || 'Gagal menyimpan.');
+      } else {
+        pending.push(item);
+        store.set('pending', pending);
+        render();
+        toast('Disimpan lokal, akan dikirim saat online.', true);
+      }
+    })
+    .finally(() => { inflight--; syncRealtime(true); });
+}
+
+function hapusOptimis(tx){
+  const idx = rows.indexOf(tx);
+  rows = rows.filter(x => x !== tx);
+  store.set('rows', rows);
+  inflight++;
+  render();
+  toast('Menghapus...');
+  kirim({ action: 'delete', id: tx.id })
+    .then(() => toast('Transaksi dihapus.'))
+    .catch(err => {
+      if (!rows.some(x => x.id === tx.id)) {
+        rows.splice(Math.max(0, Math.min(idx, rows.length)), 0, tx);
+        store.set('rows', rows);
+        render();
+      }
+      toast('Gagal menghapus.', true);
+      alert(err.message || 'Gagal menghapus. Periksa koneksi lalu coba lagi.');
+    })
+    .finally(() => { inflight--; syncRealtime(true); });
+}
+
 async function flush(){
   if (!urlOk || !pin || !pending.length) return;
   const sisa = [];
@@ -1238,7 +1287,7 @@ function setLiveStatus(online, text){
 let isSyncing = false;
 let pollCount = 0;
 async function syncRealtime(silent = true){
-  if (isSyncing || !urlOk || !pin) return;
+  if (isSyncing || inflight > 0 || !urlOk || !pin) return;
   if (silent && document.hidden) return;
   isSyncing = true;
   if (!silent) $('btnRefresh').classList.add('spin');
@@ -1324,25 +1373,13 @@ $('form').addEventListener('submit', async e => {
     };
   }
 
-  $('simpan').disabled = true;
-  try {
-    const res = await kirim({ action: 'add', ...item });
-    rows.push(item);
-    store.set('rows', rows);
-    toast('Tersimpan ke Google Sheet.');
-    syncRealtime(true);
-  } catch(err){
-    if (err.fatal){ showLoginScreen(err.message); $('simpan').disabled = false; return; }
-    pending.push(item); store.set('pending', pending); toast('Disimpan lokal, akan dikirim saat online.', true);
-  }
   $('nominal').value = '';
   $('catatan').value = '';
   $('catatanWrap').hidden = true;
   $('btnCatatan').classList.remove('on');
   isPatungan = false;
   $('btnPatungan').classList.remove('on');
-  $('simpan').disabled = false;
-  render();
+  simpanOptimis(item, 'Tersimpan ke Google Sheet.');
 });
 
 $('btnToggleFilter').onclick = () => {
@@ -1426,22 +1463,24 @@ $('btnSimpanEdit').onclick = async () => {
     return;
   }
 
-  $('btnSimpanEdit').disabled = true;
-  $('btnSimpanEdit').textContent = 'Menyimpan...';
-  try {
-    if (!activeTx.id) throw new Error('Transaksi belum punya ID. Tekan tombol sinkron lalu coba lagi.');
-    await kirim({ action: 'edit', id: activeTx.id, ...updated });
-    Object.assign(activeTx, updated);
-    store.set('rows', rows);
-    $('editModal').hidden = true;
-    render();
-    toast('Transaksi berhasil diubah.');
-    syncRealtime(true);
-  } catch (err) {
-    alert(err.message || 'Gagal mengubah transaksi.');
-  }
-  $('btnSimpanEdit').disabled = false;
-  $('btnSimpanEdit').textContent = 'Simpan Perubahan';
+  if (!activeTx.id) { alert('Transaksi belum punya ID. Tekan tombol sinkron lalu coba lagi.'); return; }
+  const tx = activeTx, before = { ...tx };
+  Object.assign(tx, updated);
+  store.set('rows', rows);
+  $('editModal').hidden = true;
+  inflight++;
+  render();
+  toast('Menyimpan...');
+  kirim({ action: 'edit', id: tx.id, ...updated })
+    .then(() => toast('Transaksi berhasil diubah.'))
+    .catch(err => {
+      Object.assign(tx, before);
+      store.set('rows', rows);
+      render();
+      toast('Gagal mengubah.', true);
+      alert(err.message || 'Gagal mengubah transaksi.');
+    })
+    .finally(() => { inflight--; syncRealtime(true); });
 };
 
 $('btnHapusTx').onclick = async () => {
@@ -1457,19 +1496,9 @@ $('btnHapusTx').onclick = async () => {
     return;
   }
 
-  $('btnHapusTx').disabled = true;
-  $('btnHapusTx').textContent = 'Menghapus...';
-  try {
-    if (!activeTx.id) throw new Error('Transaksi belum punya ID. Tekan tombol sinkron lalu coba lagi.');
-    await kirim({ action: 'delete', id: activeTx.id });
-    $('editModal').hidden = true;
-    toast('Transaksi dihapus.');
-    await syncRealtime(false);
-  } catch (err) {
-    alert(err.message || 'Gagal menghapus transaksi.');
-  }
-  $('btnHapusTx').disabled = false;
-  $('btnHapusTx').textContent = 'Hapus Transaksi';
+  if (!activeTx.id) { alert('Transaksi belum punya ID. Tekan tombol sinkron lalu coba lagi.'); return; }
+  $('editModal').hidden = true;
+  hapusOptimis(activeTx);
 };
 
 // === ANGGARAN PER KATEGORI ===
@@ -1619,27 +1648,11 @@ $('btnSimpanDep').onclick = async () => {
     patungan: false,
     dompet: $('depDompet').value
   };
-  $('btnSimpanDep').disabled = true;
-  try {
-    await kirim({ action: 'add', ...item });
-    rows.push(item);
-    store.set('rows', rows);
-    $('depModal').hidden = true;
-    render();
-    toast(depMode === 'setor' ? 'Setoran tersimpan 🎉' : 'Penarikan tersimpan.');
-    syncRealtime(true);
-  } catch (err) {
-    if (err.fatal) { alert(err.message || 'Gagal menyimpan.'); }
-    else {
-      pending.push(item); store.set('pending', pending);
-      $('depModal').hidden = true; render();
-      toast('Disimpan lokal, akan dikirim saat online.', true);
-    }
-  }
-  $('btnSimpanDep').disabled = false;
+  $('depModal').hidden = true;
+  simpanOptimis(item, depMode === 'setor' ? 'Setoran tersimpan 🎉' : 'Penarikan tersimpan.');
 };
 
-async function hapusSetoran(tx){
+function hapusSetoran(tx){
   if (!confirm(`Hapus ${tx.jenis.toLowerCase()} ${rp(tx.nominal)} ini? Saldo dan isi target akan menyesuaikan.`)) return;
   if (pending.includes(tx)) {
     pending = pending.filter(x => x !== tx);
@@ -1647,11 +1660,7 @@ async function hapusSetoran(tx){
     render();
     return;
   }
-  try {
-    await kirim({ action: 'delete', id: tx.id });
-    toast('Dihapus.');
-    await syncRealtime(false);
-  } catch (err) { alert(err.message || 'Gagal menghapus.'); }
+  hapusOptimis(tx);
 }
 
 // --- Kelola target ---
