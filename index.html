@@ -1779,8 +1779,8 @@ function renderDash(){
   }
 
   const budgets = config.budgets || {};
-  const allCats = Array.from(new Set([...Object.keys(kat), ...Object.keys(budgets)]));
-  const ks = allCats.map(k => ({ nama: k, spent: kat[k] || 0, limit: Number(budgets[k] || 0) }))
+  const allCats = Array.from(new Set([...Object.keys(kat), ...Object.keys(budgets).filter(k => KAT.Pengeluaran.includes(k))]));
+  const ks = allCats.map(k => ({ nama: k, spent: kat[k] || 0, limit: KAT.Pengeluaran.includes(k) ? Number(budgets[k] || 0) : 0 }))
     .filter(x => x.spent > 0 || x.limit > 0)
     .sort((a, b) => b.spent - a.spent);
 
