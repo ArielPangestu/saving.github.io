@@ -277,7 +277,28 @@ button.pill.ok{background:rgba(52,199,89,0.15);color:var(--in)}
 }
 .q-chip:active{transform:scale(.95)}
 .q-chip.on{background:rgba(0,122,255,0.14);color:var(--trf);border-color:rgba(0,122,255,0.3)}
-.q-chip input[type=date]{position:absolute;inset:0;opacity:0;width:100%;height:100%;min-height:0;margin:0;padding:0;cursor:pointer}
+.q-chip input[type=date]{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  width:100%;
+  height:100%;
+  min-height:0;
+  margin:0;
+  padding:0;
+  border:0;
+  cursor:pointer;
+  z-index:2;
+}
+.q-chip input[type=date]::-webkit-calendar-picker-indicator{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  margin:0;
+  padding:0;
+  cursor:pointer;
+}
 
 .note-tags{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
 .note-tags::-webkit-scrollbar{display:none}
@@ -487,6 +508,16 @@ select#bln{width:auto;min-width:165px;font-weight:600;border-radius:12px;min-hei
 }
 .rec-item{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:.5px solid var(--line);gap:8px}
 .rec-item:last-child{border-bottom:0}
+
+/* === DETAIL SHEET === */
+.det-hero{text-align:center;padding:8px 0 18px;border-bottom:.5px solid var(--line);margin-bottom:14px}
+.det-ico{width:56px;height:56px;border-radius:18px;background:var(--fill);display:inline-flex;align-items:center;justify-content:center;font-size:1.75rem;margin-bottom:8px}
+.det-kat{font-weight:700;font-size:1.1rem}
+.det-nom{font-size:2rem;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:4px}
+.det-rows{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+.det-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;font-size:.94rem}
+.det-row span{color:var(--mute);flex:none}
+.det-row b{font-weight:600;text-align:right;word-break:break-word}
 
 /* === DOMPET === */
 .seg label:has(input[name=wTab]:checked){color:var(--ink)}
@@ -757,7 +788,31 @@ details.det[open] summary::after{transform:rotate(-90deg)}
   <button class="link" id="gantiPin" type="button">Keluar / Ganti Akun</button>
 </main>
 
-<!-- Ubah / hapus transaksi -->
+<!-- Detail transaksi (read-only sebelum edit) -->
+<div class="modal-bg" id="detailModal" hidden>
+  <div class="modal">
+    <div class="sheet-handle"></div>
+    <div class="modal-head">
+      <h2>Rincian Catatan</h2>
+      <button type="button" class="close-btn" id="closeDetail">&times;</button>
+    </div>
+    <div class="det-hero">
+      <div class="det-ico" id="detIco"></div>
+      <div class="det-kat" id="detKat"></div>
+      <div class="det-nom" id="detNom"></div>
+    </div>
+    <div class="det-rows">
+      <div class="det-row"><span>Jenis</span><b id="detJenis"></b></div>
+      <div class="det-row"><span>Tanggal</span><b id="detTanggal"></b></div>
+      <div class="det-row"><span>Dicatat oleh</span><b id="detOleh"></b></div>
+      <div class="det-row" id="detCatatanRow"><span>Catatan</span><b id="detCatatan"></b></div>
+    </div>
+    <button type="button" class="main" id="btnBukaEdit">✏️ Ubah Catatan</button>
+    <button type="button" class="danger" id="btnHapusTx">Hapus</button>
+  </div>
+</div>
+
+<!-- Ubah transaksi -->
 <div class="modal-bg" id="editModal" hidden>
   <div class="modal">
     <div class="sheet-handle"></div>
@@ -779,7 +834,6 @@ details.det[open] summary::after{transform:rotate(-90deg)}
     </div>
     <label class="f">Catatan<input type="text" id="eCatatan" placeholder="Opsional"></label>
     <button type="button" class="main" id="btnSimpanEdit">Simpan Perubahan</button>
-    <button type="button" class="danger" id="btnHapusTx">Hapus</button>
   </div>
 </div>
 
@@ -1143,7 +1197,13 @@ function updateTglLabel(){
   if (v === today()) $('tglLabel').textContent = 'Hari ini';
   else $('tglLabel').textContent = new Date(v + 'T00:00:00').toLocaleDateString('id-ID', { day:'numeric', month:'short' });
 }
-$('tanggal').addEventListener('change', updateTglLabel);
+const tglInput = $('tanggal');
+tglInput.addEventListener('change', updateTglLabel);
+tglInput.parentElement.addEventListener('click', () => {
+  if (typeof tglInput.showPicker === 'function') {
+    try { tglInput.showPicker(); } catch (e) {}
+  }
+});
 updateTglLabel();
 
 $('btnOleh').onclick = () => {
@@ -1267,7 +1327,7 @@ $('btnResetFilter').onclick = () => {
 };
 $('btnLoadMore').onclick = () => { listLimit += 25; renderTxList(); };
 
-// === UBAH & HAPUS ===
+// === DETAIL, UBAH & HAPUS ===
 function isiKategoriEdit(jns, selected){
   const opts = KAT[jns].slice();
   if (selected && !opts.includes(selected)) opts.unshift(selected);
@@ -1275,6 +1335,37 @@ function isiKategoriEdit(jns, selected){
 }
 document.querySelectorAll('input[name=eJenis]').forEach(r => r.addEventListener('change', () => isiKategoriEdit(r.value, '')));
 formatInputRp($('eNominal'));
+
+function bukaDetail(tx) {
+  activeTx = tx;
+  const keluar = isOut(tx);
+  $('detIco').textContent = rowIcon(tx);
+  $('detKat').textContent = tx.kategori;
+  $('detNom').textContent = (keluar ? '−' : '+') + rp(tx.nominal);
+  $('detNom').className = 'det-nom ' + (keluar ? 'out' : 'in');
+  $('detJenis').textContent = keluar ? 'Pengeluaran' : 'Pemasukan';
+  $('detTanggal').textContent = new Date(tx.tanggal + 'T00:00:00').toLocaleDateString('id-ID', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+  $('detOleh').textContent = tx.oleh || 'Ariel';
+  if (tx.catatan) {
+    $('detCatatanRow').hidden = false;
+    $('detCatatan').textContent = tx.catatan;
+  } else {
+    $('detCatatanRow').hidden = true;
+  }
+  $('detailModal').hidden = false;
+}
+
+function bukaFormEdit(tx) {
+  document.querySelector('input[name=eJenis][value="' + tx.jenis + '"]').checked = true;
+  $('eTanggal').value = tx.tanggal;
+  $('eNominal').value = 'Rp ' + Number(tx.nominal).toLocaleString('id-ID');
+  isiKategoriEdit(tx.jenis, tx.kategori);
+  $('eOleh').value = tx.oleh || 'Ariel';
+  $('eCatatan').value = tx.catatan || '';
+  $('editModal').hidden = false;
+}
 
 $('list').addEventListener('click', e => {
   const li = e.target.closest('li[data-idx]');
@@ -1288,16 +1379,20 @@ $('list').addEventListener('click', e => {
     hapusOptimis(tx);
     return;
   }
-  activeTx = tx;
-  document.querySelector('input[name=eJenis][value="' + tx.jenis + '"]').checked = true;
-  $('eTanggal').value = tx.tanggal;
-  $('eNominal').value = 'Rp ' + Number(tx.nominal).toLocaleString('id-ID');
-  isiKategoriEdit(tx.jenis, tx.kategori);
-  $('eOleh').value = tx.oleh || 'Ariel';
-  $('eCatatan').value = tx.catatan || '';
-  $('editModal').hidden = false;
+  bukaDetail(tx);
 });
+
+$('closeDetail').onclick = () => $('detailModal').hidden = true;
+$('btnBukaEdit').onclick = () => {
+  if (!activeTx) return;
+  $('detailModal').hidden = true;
+  bukaFormEdit(activeTx);
+};
 $('closeEdit').onclick = () => $('editModal').hidden = true;
+
+['detailModal', 'editModal', 'planModal', 'shortcutModal'].forEach(id => {
+  $(id).addEventListener('click', e => { if (e.target === $(id)) $(id).hidden = true; });
+});
 
 $('btnSimpanEdit').onclick = () => {
   if (!activeTx) return;
@@ -1347,12 +1442,14 @@ $('btnHapusTx').onclick = () => {
   if (pending.includes(activeTx)) {
     pending = pending.filter(x => x !== activeTx);
     store.set('pending', pending);
+    $('detailModal').hidden = true;
     $('editModal').hidden = true;
     render();
     toast('Dihapus.');
     return;
   }
   if (!activeTx.id) { alert('Catatan belum punya ID. Tekan tombol sinkron lalu coba lagi.'); return; }
+  $('detailModal').hidden = true;
   $('editModal').hidden = true;
   hapusOptimis(activeTx);
 };
