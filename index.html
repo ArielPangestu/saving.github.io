@@ -566,6 +566,12 @@ details.det summary::-webkit-details-marker{display:none}
 details.det summary::after{content:"›";font-size:1.5rem;color:var(--mute);transform:rotate(90deg);transition:transform .2s}
 details.det[open] summary::after{transform:rotate(-90deg)}
 .plan-sum{font-size:.82rem;color:var(--mute);margin:-4px 0 12px}
+.sc-row{display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 14px}
+.sc-chip{padding:8px 13px;border:0;border-radius:99px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;transition:transform .12s}
+.sc-chip:active{transform:scale(.93)}
+.sc-chip.in{background:rgba(52,199,89,.16);color:var(--in)}
+.sc-chip.out{background:rgba(255,59,48,.14);color:var(--out)}
+.sc-chip.add{background:var(--fill);color:var(--mute);font-weight:600}
 @media print{
   .hero-btn,.cat-grid,.amt-chips{display:none!important}
   .hero{box-shadow:none}
@@ -646,9 +652,11 @@ details.det[open] summary::after{transform:rotate(-90deg)}
   <section id="tCatat">
   <form id="form" autocomplete="off">
     <div class="seg two">
-      <label><input type="radio" name="jenis" value="Pengeluaran" checked>Keluar</label>
-      <label><input type="radio" name="jenis" value="Pemasukan">Masuk</label>
+      <label><input type="radio" name="jenis" value="Pemasukan" checked>Masuk</label>
+      <label><input type="radio" name="jenis" value="Pengeluaran">Keluar</label>
     </div>
+
+    <div class="sc-row" id="scRow"></div>
 
     <input type="text" id="nominal" inputmode="numeric" autocomplete="off" placeholder="Rp 0">
     <div class="amt-chips">
@@ -758,8 +766,8 @@ details.det[open] summary::after{transform:rotate(-90deg)}
       <button type="button" class="close-btn" id="closeEdit">&times;</button>
     </div>
     <div class="seg two">
-      <label><input type="radio" name="eJenis" value="Pengeluaran">Keluar</label>
       <label><input type="radio" name="eJenis" value="Pemasukan">Masuk</label>
+      <label><input type="radio" name="eJenis" value="Pengeluaran">Keluar</label>
     </div>
     <div class="row">
       <label class="f">Tanggal<input type="date" id="eTanggal" required></label>
@@ -790,6 +798,33 @@ details.det[open] summary::after{transform:rotate(-90deg)}
     <div id="planInputs"></div>
     <p class="plan-sum" id="planSum"></p>
     <button type="button" class="main" id="btnSimpanPlan">Simpan</button>
+  </div>
+</div>
+
+<!-- Pintasan cepat -->
+<div class="modal-bg" id="shortcutModal" hidden>
+  <div class="modal">
+    <div class="sheet-handle"></div>
+    <div class="modal-head">
+      <h2>⚡ Pintasan Cepat</h2>
+      <button type="button" class="close-btn" id="closeSc">&times;</button>
+    </div>
+    <p style="font-size:.86rem;color:var(--mute);margin-top:0">Satu ketukan langsung mencatat. Cocok untuk gaji atau setoran tetap, misalnya "Gaji tgl 25".</p>
+    <div id="scList" style="margin-bottom:14px"></div>
+    <div style="border-top:1px solid var(--line);padding-top:14px">
+      <h2 style="font-size:1rem">Tambah pintasan</h2>
+      <div class="seg two">
+        <label><input type="radio" name="scJenis" value="Pemasukan" checked>Masuk</label>
+        <label><input type="radio" name="scJenis" value="Pengeluaran">Keluar</label>
+      </div>
+      <label class="f">Nama (opsional)<input type="text" id="scNama" placeholder="Gaji tgl 25"></label>
+      <div class="row">
+        <label class="f">Kategori<select id="scKat"></select></label>
+        <label class="f">Atas nama<select id="scOleh"><option>Ariel</option><option>Poppy</option></select></label>
+      </div>
+      <label class="f">Nominal<input type="text" id="scNom" inputmode="numeric" autocomplete="off" placeholder="Rp 3.000.000"></label>
+      <button type="button" class="main" id="btnTambahSc">Tambah Pintasan</button>
+    </div>
   </div>
 </div>
 
@@ -834,6 +869,7 @@ const rowIcon = r => (isIn(r) || isOut(r)) ? katIcon(r.kategori) : '📦';
 function normalizeConfig(raw){
   const c = { budgets: {}, ...(raw || {}) };
   if (!c.budgets || typeof c.budgets !== 'object') c.budgets = {};
+  if (!Array.isArray(c.pintasan)) c.pintasan = [];
   if (c.danaTarget === undefined && Number(c.totalBudget) > 0) c.danaTarget = Number(c.totalBudget);
   return c;
 }
@@ -1062,7 +1098,7 @@ function jenis(){ return document.querySelector('input[name=jenis]:checked').val
 function renderCatChips(){
   const j = jenis();
   const last = store.get('lastKat', {});
-  if (!KAT[j].includes(selKat)) selKat = KAT[j].includes(last[j]) ? last[j] : '';
+  if (!KAT[j].includes(selKat)) selKat = KAT[j].includes(last[j]) ? last[j] : (j === 'Pemasukan' ? KAT[j][0] : '');
   $('catGrid').innerHTML = KAT[j].map(k =>
     `<button type="button" class="cat-chip${k === selKat ? ' on' : ''}" data-k="${esc(k)}"><i>${katIcon(k)}</i><span>${esc(k)}</span></button>`).join('');
   $('catGrid').querySelectorAll('.cat-chip').forEach(b => b.onclick = () => {
@@ -1070,6 +1106,7 @@ function renderCatChips(){
     $('catGrid').querySelectorAll('.cat-chip').forEach(x => x.classList.toggle('on', x === b));
   });
   updateRepeat();
+  renderShortcuts();
 }
 
 function updateRepeat(){
@@ -1114,6 +1151,7 @@ $('btnOleh').onclick = () => {
   $('olehLabel').textContent = activeOleh;
   store.set('oleh', activeOleh);
   updateRepeat();
+  renderShortcuts();
 };
 $('btnCatatan').onclick = () => {
   const show = $('catatanWrap').hidden;
@@ -1176,6 +1214,7 @@ function render(){
   $('hNote').textContent = note;
 
   updateRepeat();
+  renderShortcuts();
   renderTxList();
   if (!$('tDash').hidden) renderDash();
 }
@@ -1316,6 +1355,94 @@ $('btnHapusTx').onclick = () => {
   if (!activeTx.id) { alert('Catatan belum punya ID. Tekan tombol sinkron lalu coba lagi.'); return; }
   $('editModal').hidden = true;
   hapusOptimis(activeTx);
+};
+
+// === PINTASAN CEPAT (satu ketukan langsung tercatat) ===
+const scLast = {};
+function tapShortcut(sc){
+  if (Date.now() - (scLast[sc.id] || 0) < 3000) { toast('Sudah tercatat barusan.', true); return; }
+  if (!urlOk) { toast('Alamat Google Sheet belum diisi di kode (SCRIPT_URL).', true); return; }
+  if (!pin) { showLoginScreen('Sesi berakhir, masukkan PIN.'); return; }
+  scLast[sc.id] = Date.now();
+  const label = sc.label && sc.label !== sc.kategori ? sc.label : '';
+  const item = { id: uid(), tanggal: $('tanggal').value || today(), jenis: sc.jenis, kategori: sc.kategori, nominal: Number(sc.nominal), catatan: label, oleh: sc.oleh || activeOleh, patungan: false, dompet: 'Bank' };
+  $('tanggal').value = today();
+  updateTglLabel();
+  simpanOptimis(item, '⚡ ' + (sc.label || sc.kategori) + ' ' + rp(sc.nominal) + ' tercatat');
+}
+
+function renderShortcuts(){
+  const j = jenis();
+  const list = (config.pintasan || []).filter(s => s.jenis === j && (s.oleh || activeOleh) === activeOleh);
+  $('scRow').innerHTML = list.map(s =>
+    `<button type="button" class="sc-chip ${s.jenis === 'Pemasukan' ? 'in' : 'out'}" data-id="${esc(s.id)}">⚡ ${esc(s.label || s.kategori)} · ${rpShort(s.nominal)}</button>`
+  ).join('') + '<button type="button" class="sc-chip add" id="btnScAtur">＋ Pintasan</button>';
+  $('scRow').querySelectorAll('[data-id]').forEach(b => b.onclick = () => {
+    const sc = (config.pintasan || []).find(x => x.id === b.dataset.id);
+    if (sc) tapShortcut(sc);
+  });
+  $('btnScAtur').onclick = bukaShortcut;
+}
+
+function isiScKat(){
+  const j = document.querySelector('input[name=scJenis]:checked').value;
+  $('scKat').innerHTML = KAT[j].map(k => `<option>${esc(k)}</option>`).join('');
+}
+document.querySelectorAll('input[name=scJenis]').forEach(r => r.addEventListener('change', isiScKat));
+formatInputRp($('scNom'));
+
+function renderScList(){
+  const list = config.pintasan || [];
+  $('scList').innerHTML = list.length ? list.map(s => `
+    <div class="rec-item">
+      <div><strong>⚡ ${esc(s.label || s.kategori)}</strong>
+        <small style="display:block;color:var(--mute)">${s.jenis === 'Pemasukan' ? 'Masuk' : 'Keluar'} · ${esc(s.kategori)} · ${rp(s.nominal)} · ${esc(s.oleh || '')}</small></div>
+      <button type="button" class="pill" style="color:var(--out)" data-delsc="${esc(s.id)}">Hapus</button>
+    </div>`).join('') : '<p class="empty">Belum ada pintasan.</p>';
+  $('scList').querySelectorAll('[data-delsc]').forEach(b => b.onclick = async () => {
+    const nextConfig = { ...config, pintasan: (config.pintasan || []).filter(x => x.id !== b.dataset.delsc) };
+    b.disabled = true;
+    try {
+      await kirim({ action: 'saveConfig', config: nextConfig });
+      config = nextConfig; store.set('config', config);
+      renderScList(); renderShortcuts();
+    } catch (err) { alert(err.message || 'Gagal menghapus pintasan.'); b.disabled = false; }
+  });
+}
+
+function bukaShortcut(){
+  document.querySelector('input[name=scJenis][value="' + jenis() + '"]').checked = true;
+  isiScKat();
+  $('scOleh').value = activeOleh;
+  $('scNama').value = ''; $('scNom').value = '';
+  renderScList();
+  $('shortcutModal').hidden = false;
+}
+$('closeSc').onclick = () => $('shortcutModal').hidden = true;
+
+$('btnTambahSc').onclick = async () => {
+  const nominal = angka($('scNom').value);
+  if (!nominal) { alert('Isi nominal lebih dari 0.'); return; }
+  const sc = {
+    id: 'sc_' + Date.now(),
+    label: $('scNama').value.trim(),
+    jenis: document.querySelector('input[name=scJenis]:checked').value,
+    kategori: $('scKat').value,
+    nominal,
+    oleh: $('scOleh').value
+  };
+  const nextConfig = { ...config, pintasan: [...(config.pintasan || []), sc] };
+  $('btnTambahSc').disabled = true;
+  $('btnTambahSc').textContent = 'Menyimpan...';
+  try {
+    await kirim({ action: 'saveConfig', config: nextConfig });
+    config = nextConfig; store.set('config', config);
+    $('scNama').value = ''; $('scNom').value = '';
+    renderScList(); renderShortcuts();
+    toast('Pintasan ditambahkan.');
+  } catch (err) { alert(err.message || 'Gagal menyimpan pintasan.'); }
+  $('btnTambahSc').disabled = false;
+  $('btnTambahSc').textContent = 'Tambah Pintasan';
 };
 
 // === RENCANA NIKAH ===
