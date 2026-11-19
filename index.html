@@ -488,6 +488,10 @@ select#bln{width:auto;min-width:165px;font-weight:600;border-radius:12px;min-hei
 .rec-item{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:.5px solid var(--line);gap:8px}
 .rec-item:last-child{border-bottom:0}
 
+/* === DOMPET === */
+.seg label:has(input[name=wTab]:checked){color:var(--ink)}
+.w-act{margin-top:8px}
+
 /* === POLISH === */
 @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes grow{from{width:0}}
@@ -524,7 +528,7 @@ select#bln{width:auto;min-width:165px;font-weight:600;border-radius:12px;min-hei
   :root{--bg:#fff;--card:#fff;--card-solid:#fff;--ink:#111;--mute:#666;--line:#ddd;--fill:#f0f0f3;--in:#1a9c45;--out:#d92d20;--warn:#d97706;--trf:#0a64d6;--hero-grad:linear-gradient(135deg,#0D3B3E 0%,#165B5E 52%,#1E7A74 100%);--herofg:#fff;--sh:none}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact;animation:none!important}
   html,body{background:#fff!important;background-image:none!important;color:#111}
-  .tabs,.top,.saldo,.save-card,.goals,.trio,.pair,#tCatat,#gantiPin,#loginScreen,.export-btns,.sync-btn,.pill,#bln,.modal-bg{display:none!important}
+  .tabs,.top,.saldo,.save-card,.goals,.trio,.pair,#tCatat,#gantiPin,#loginScreen,.export-btns,.sync-btn,.pill,#bln,.modal-bg,#lunasNom{display:none!important}
   #appMain,#tDash{display:block!important}
   main{max-width:100%;padding:0}
   .print-only{display:block;margin:0 0 12px}
@@ -587,8 +591,8 @@ select#bln{width:auto;min-width:165px;font-weight:600;border-radius:12px;min-hei
 
   <div class="save-card">
     <div class="save-top">
-      <div><small>Total saldo (seluruh bulan)</small><b id="totalSaldo">Rp 0</b></div>
-      <button type="button" class="pill" id="btnTarget">+ Target</button>
+      <div><small>Total aset (semua dompet)</small><b id="totalSaldo">Rp 0</b></div>
+      <div style="display:flex;gap:6px"><button type="button" class="pill" id="btnWallet">Cek Saldo</button><button type="button" class="pill" id="btnTarget">+ Target</button></div>
     </div>
   </div>
 
@@ -639,6 +643,8 @@ select#bln{width:auto;min-width:165px;font-weight:600;border-radius:12px;min-hei
       <label class="f">Dari Dompet<select id="trfDari"><option>Bank</option><option>E-Wallet</option><option>Tunai</option></select></label>
       <label class="f">Ke Dompet<select id="trfKe"><option>E-Wallet</option><option>Tunai</option><option>Bank</option></select></label>
     </div>
+
+    <label class="f" id="rowAdmin" hidden>Biaya admin transfer (opsional)<input type="text" id="biayaAdmin" inputmode="numeric" autocomplete="off" placeholder="Rp 0"></label>
 
     <div class="quick-meta">
       <label class="q-chip" title="Ubah tanggal">📅 <span id="tglLabel">Hari ini</span><input type="date" id="tanggal" required></label>
@@ -783,10 +789,10 @@ select#bln{width:auto;min-width:165px;font-weight:600;border-radius:12px;min-hei
   <div class="modal">
     <div class="sheet-handle"></div>
     <div class="modal-head">
-      <h2>Ubah Transaksi</h2>
+      <h2 id="eTitle">Ubah Transaksi</h2>
       <button type="button" class="close-btn" id="closeEdit">&times;</button>
     </div>
-    <div class="seg" style="grid-template-columns:1fr 1fr">
+    <div class="seg" id="eSeg" style="grid-template-columns:1fr 1fr">
       <label><input type="radio" name="eJenis" value="Pengeluaran">Pengeluaran</label>
       <label><input type="radio" name="eJenis" value="Pemasukan">Pemasukan</label>
     </div>
@@ -794,7 +800,11 @@ select#bln{width:auto;min-width:165px;font-weight:600;border-radius:12px;min-hei
       <label class="f">Tanggal<input type="date" id="eTanggal" required></label>
       <label class="f">Nominal<input type="text" id="eNominal" inputmode="numeric" autocomplete="off" required></label>
     </div>
-    <div class="row">
+    <div class="row" id="eTrfRow" hidden>
+      <label class="f">Dari Dompet<select id="eTrfDari"><option>Bank</option><option>E-Wallet</option><option>Tunai</option></select></label>
+      <label class="f">Ke Dompet<select id="eTrfKe"><option>Bank</option><option>E-Wallet</option><option>Tunai</option></select></label>
+    </div>
+    <div class="row" id="eRowKatDompet">
       <label class="f">Kategori<select id="eKategori"></select></label>
       <label class="f">Dompet<select id="eDompet"><option>Bank</option><option>E-Wallet</option><option>Tunai</option></select></label>
     </div>
@@ -888,6 +898,31 @@ select#bln{width:auto;min-width:165px;font-weight:600;border-radius:12px;min-hei
   </div>
 </div>
 
+<!-- Modal 5: Dompet (cek saldo & saldo awal) -->
+<div class="modal-bg" id="walletModal" hidden>
+  <div class="modal">
+    <div class="sheet-handle"></div>
+    <div class="modal-head">
+      <h2>Dompet</h2>
+      <button type="button" class="close-btn" id="closeWallet">&times;</button>
+    </div>
+    <div class="seg" style="grid-template-columns:1fr 1fr">
+      <label><input type="radio" name="wTab" value="cek" checked>Cek Saldo</label>
+      <label><input type="radio" name="wTab" value="awal">Saldo Awal</label>
+    </div>
+    <div id="wCek">
+      <p style="font-size:.86rem;color:var(--mute);margin-top:0">Isi saldo sebenarnya di rekening, aplikasi e-wallet, atau dompetmu. Aplikasi menunjukkan selisihnya dan bisa mencatat koreksi.</p>
+      <div id="wCekList"></div>
+      <button type="button" class="main" id="btnKoreksi" style="margin-top:12px">Catat Koreksi</button>
+    </div>
+    <div id="wAwal" hidden>
+      <p style="font-size:.86rem;color:var(--mute);margin-top:0">Saldo yang sudah ada di tiap dompet sebelum kamu mulai memakai aplikasi ini. Dipakai sebagai titik awal perhitungan.</p>
+      <div id="wAwalList"></div>
+      <button type="button" class="main" id="btnSimpanAwal">Simpan Saldo Awal</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const KAT = {
   Pengeluaran: ['Gedung','Katering','Butik & busana','Rias & dokumentasi','Dekorasi','Undangan & souvenir','Seserahan & mahar','Lainnya'],
@@ -933,12 +968,12 @@ const isTab = r => r.jenis === 'Setor' || r.jenis === 'Tarik';
 let dataVersion = store.get('ver', '');
 let inflight = 0;
 const targetName = id => { const t = (config.targets || []).find(x => x.id === id); return t ? t.nama : '(target dihapus)'; };
-const katLabel = r => isTab(r) ? (r.jenis + ' · ' + targetName(r.kategori)) : r.kategori;
+const katLabel = r => isTab(r) ? (r.jenis + ' · ' + targetName(r.kategori)) : r.jenis === 'Lunas' ? ('Lunas · ' + r.oleh + ' → ' + r.kategori) : r.jenis === 'Koreksi' ? ('Koreksi saldo · ' + r.kategori) : r.kategori;
 const savedOf = id => [...rows, ...pending].reduce((a, r) => (isTab(r) && r.kategori === id) ? a + (r.jenis === 'Setor' ? 1 : -1) * (Number(r.nominal) || 0) : a, 0);
 
 const KAT_ICON = {'Gedung':'🏛️','Katering':'🍽️','Butik & busana':'👗','Rias & dokumentasi':'📸','Dekorasi':'💐','Undangan & souvenir':'💌','Seserahan & mahar':'🎁','Lainnya':'🧾','Gaji':'💼','Bonus':'🎉','Usaha sampingan':'🛍️','Transfer':'🔁'};
 const katIcon = k => KAT_ICON[k] || '🧾';
-const rowIcon = r => isTab(r) ? (((config.targets || []).find(x => x.id === r.kategori) || {}).icon || '💍') : katIcon(r.kategori);
+const rowIcon = r => r.jenis === 'Lunas' ? '🤝' : r.jenis === 'Koreksi' ? '⚖️' : isTab(r) ? (((config.targets || []).find(x => x.id === r.kategori) || {}).icon || '💍') : katIcon(r.kategori);
 
 let activeOleh = store.get('oleh', 'Ariel');
 let isPatungan = false;
@@ -1059,6 +1094,7 @@ document.querySelectorAll('.n-tag').forEach(btn => {
 function jenis(){ return document.querySelector('input[name=jenis]:checked').value; }
 function isiKategori(){
   const j = jenis();
+  $('rowAdmin').hidden = (j !== 'Transfer');
   if (j === 'Transfer') {
     $('rowKatDompet').hidden = true;
     $('rowTransfer').hidden = false;
@@ -1093,6 +1129,7 @@ formatInputRp($('eNominal'));
 formatInputRp($('inTargetNom'));
 formatInputRp($('depNom'));
 formatInputRp($('budgetTotal'));
+formatInputRp($('biayaAdmin'));
 
 let toastTimer;
 function toast(msg, bad){
@@ -1116,30 +1153,12 @@ function render(){
   const netTab = sum(all.filter(r => r.jenis === 'Setor')) - sum(all.filter(r => r.jenis === 'Tarik'));
   $('tin').textContent = rp(tin); $('tout').textContent = rp(tout); $('saldo').textContent = rp(tin - tout - netTab);
 
-  const wBal = { Bank: 0, 'E-Wallet': 0, Tunai: 0 };
-  allRows.forEach(r => {
-    const nom = Number(r.nominal) || 0;
-    const dmp = r.dompet || 'Bank';
-    if (r.jenis === 'Pemasukan' || r.jenis === 'Tarik') {
-      wBal[dmp] = (wBal[dmp] || 0) + nom;
-    } else if (r.jenis === 'Pengeluaran' || r.jenis === 'Setor') {
-      wBal[dmp] = (wBal[dmp] || 0) - nom;
-    } else if (r.jenis === 'Transfer') {
-      const parts = String(dmp).split('->').map(s => s.trim());
-      if (parts.length === 2) {
-        wBal[parts[0]] = (wBal[parts[0]] || 0) - nom;
-        wBal[parts[1]] = (wBal[parts[1]] || 0) + nom;
-      }
-    }
-  });
+  const wBal = walletBalances();
   $('dompetCards').innerHTML = DOMPETS.map(d =>
     `<div class="mini"><small>${d}</small><b>${rp(wBal[d] || 0)}</b></div>`
   ).join('');
 
-  const totalInAll = allRows.filter(r => r.jenis === 'Pemasukan').reduce((a,r) => a + Number(r.nominal), 0);
-  const totalOutAll = allRows.filter(r => r.jenis === 'Pengeluaran').reduce((a,r) => a + Number(r.nominal), 0);
-  const netTabAll = sum(allRows.filter(r => r.jenis === 'Setor')) - sum(allRows.filter(r => r.jenis === 'Tarik'));
-  $('totalSaldo').textContent = rp(totalInAll - totalOutAll - netTabAll);
+  $('totalSaldo').textContent = rp(DOMPETS.reduce((a, d) => a + (wBal[d] || 0), 0));
 
   renderGoals();
   const tgsAll = config.targets || [];
@@ -1197,11 +1216,11 @@ function renderTxList(allRows){
   $('btnLoadMore').hidden = isFiltering || filtered.length <= listLimit;
 
   $('list').innerHTML = displayedList.length ? displayedList.map((r, i) => {
-    const isOut = r.jenis === 'Pengeluaran';
-    const isTrf = r.jenis === 'Transfer' || isTab(r);
+    const isOut = r.jenis === 'Pengeluaran' || (r.jenis === 'Koreksi' && r.kategori === 'Kurang');
+    const isTrf = r.jenis === 'Transfer' || isTab(r) || r.jenis === 'Lunas';
     const tunda = pending.includes(r) ? ' (menunggu terkirim)' : '';
     const patBadge = r.patungan ? '<span class="badge split-b">Patungan</span>' : '';
-    const dmpBadge = r.dompet ? `<span class="badge dompet-b">${esc(r.dompet)}</span>` : '';
+    const dmpBadge = (r.dompet && r.jenis !== 'Lunas') ? `<span class="badge dompet-b">${esc(r.dompet)}</span>` : '';
     const cls = isTrf ? 'trf' : (isOut ? 'out' : 'in');
     const sign = isTab(r) ? (r.jenis === 'Setor' ? '↗ ' : '↙ ') : (isTrf ? '⇄ ' : (isOut ? '−' : '+'));
     return `<li data-idx="${i}"><span class="tx-l"><i class="tx-ico">${rowIcon(r)}</i><span>${esc(katLabel(r))}${dmpBadge}${patBadge}<small>${esc(r.tanggal)}${r.oleh ? ' · ' + esc(r.oleh) : ''}${r.catatan ? ' · ' + esc(r.catatan) : ''}${tunda}</small></span></span><b class="${cls}">${sign}${rp(r.nominal)}</b></li>`;
@@ -1350,6 +1369,7 @@ $('form').addEventListener('submit', async e => {
 
   const jns = jenis();
   let item;
+  let feeItem = null;
   if (jns === 'Transfer') {
     const dari = $('trfDari').value;
     const ke = $('trfKe').value;
@@ -1365,6 +1385,8 @@ $('form').addEventListener('submit', async e => {
       patungan: false,
       dompet: `${dari} -> ${ke}`
     };
+    const fee = angka($('biayaAdmin').value);
+    if (fee > 0) feeItem = { id: uid(), tanggal: item.tanggal, jenis: 'Pengeluaran', kategori: 'Lainnya', nominal: fee, catatan: `Biaya admin transfer ${dari} → ${ke}`, oleh: activeOleh, patungan: false, dompet: dari };
   } else {
     item = {
       id: uid(),
@@ -1380,12 +1402,14 @@ $('form').addEventListener('submit', async e => {
   }
 
   $('nominal').value = '';
+  $('biayaAdmin').value = '';
   $('catatan').value = '';
   $('catatanWrap').hidden = true;
   $('btnCatatan').classList.remove('on');
   isPatungan = false;
   $('btnPatungan').classList.remove('on');
   simpanOptimis(item, 'Tersimpan ke Google Sheet.');
+  if (feeItem) simpanOptimis(feeItem, 'Biaya admin tercatat.');
 });
 
 $('btnToggleFilter').onclick = () => {
@@ -1424,7 +1448,7 @@ $('list').addEventListener('click', e => {
   if (!li) return;
   const tx = displayedList[Number(li.dataset.idx)];
   if (!tx) return;
-  if (isTab(tx)) { hapusSetoran(tx); return; }
+  if (isTab(tx) || tx.jenis === 'Lunas' || tx.jenis === 'Koreksi') { hapusSetoran(tx); return; }
   activeTx = tx;
   const isTrf = tx.jenis === 'Transfer';
   const radioEl = document.querySelector(`input[name=eJenis][value="${isTrf ? 'Pengeluaran' : tx.jenis}"]`);
@@ -1439,6 +1463,17 @@ $('list').addEventListener('click', e => {
   $('eOleh').value = tx.oleh || 'Ariel';
   $('eCatatan').value = tx.catatan || '';
   $('ePatungan').checked = !!tx.patungan;
+  const trf = tx.jenis === 'Transfer';
+  $('eTitle').textContent = trf ? 'Ubah Transfer' : 'Ubah Transaksi';
+  $('eSeg').hidden = trf;
+  $('eRowKatDompet').hidden = trf;
+  $('ePatunganWrap').hidden = trf || tx.jenis !== 'Pengeluaran';
+  $('eTrfRow').hidden = !trf;
+  if (trf) {
+    const [dari, ke] = String(tx.dompet || '').split('->').map(x => x.trim());
+    $('eTrfDari').value = DOMPETS.includes(dari) ? dari : 'Bank';
+    $('eTrfKe').value = DOMPETS.includes(ke) ? ke : 'E-Wallet';
+  }
   $('editModal').hidden = false;
 });
 $('closeEdit').onclick = () => $('editModal').hidden = true;
@@ -1449,6 +1484,7 @@ $('btnSimpanEdit').onclick = async () => {
   if (!nom){ alert('Nominal harus lebih dari 0'); return; }
   const isTrf = activeTx.jenis === 'Transfer';
   const jns = isTrf ? 'Transfer' : document.querySelector('input[name=eJenis]:checked').value;
+  if (isTrf && $('eTrfDari').value === $('eTrfKe').value) { alert('Dompet asal dan tujuan tidak boleh sama.'); return; }
   const updated = {
     tanggal: $('eTanggal').value,
     jenis: jns,
@@ -1457,7 +1493,7 @@ $('btnSimpanEdit').onclick = async () => {
     catatan: $('eCatatan').value.trim(),
     oleh: $('eOleh').value,
     patungan: jns === 'Pengeluaran' ? $('ePatungan').checked : false,
-    dompet: $('eDompet').value
+    dompet: isTrf ? ($('eTrfDari').value + ' -> ' + $('eTrfKe').value) : $('eDompet').value
   };
 
   if (pending.includes(activeTx)) {
@@ -1663,7 +1699,8 @@ $('btnSimpanDep').onclick = async () => {
 };
 
 function hapusSetoran(tx){
-  if (!confirm(`Hapus ${tx.jenis.toLowerCase()} ${rp(tx.nominal)} ini? Saldo dan isi target akan menyesuaikan.`)) return;
+  const nama = tx.jenis === 'Lunas' ? 'pelunasan patungan' : tx.jenis === 'Koreksi' ? 'koreksi saldo' : tx.jenis.toLowerCase();
+  if (!confirm(`Hapus ${nama} ${rp(tx.nominal)} ini?`)) return;
   if (pending.includes(tx)) {
     pending = pending.filter(x => x !== tx);
     store.set('pending', pending);
@@ -1773,6 +1810,107 @@ $('btnSimpanTarget').onclick = async () => {
   } catch (err) { alert(err.message || 'Gagal menyimpan target.'); }
   $('btnSimpanTarget').disabled = false;
   $('btnSimpanTarget').textContent = editingTargetId ? 'Simpan Perubahan' : 'Tambah Target';
+};
+
+// === DOMPET: SALDO, CEK SALDO, SALDO AWAL ===
+function walletBalances(){
+  const w = { Bank: 0, 'E-Wallet': 0, Tunai: 0 };
+  const awal = config.saldoAwal || {};
+  DOMPETS.forEach(d => { w[d] = Number(awal[d]) || 0; });
+  [...rows, ...pending].forEach(r => {
+    const nom = Number(r.nominal) || 0;
+    const dmp = r.dompet || 'Bank';
+    if (r.jenis === 'Pemasukan' || r.jenis === 'Tarik' || (r.jenis === 'Koreksi' && r.kategori === 'Tambah')) {
+      w[dmp] = (w[dmp] || 0) + nom;
+    } else if (r.jenis === 'Pengeluaran' || r.jenis === 'Setor' || (r.jenis === 'Koreksi' && r.kategori === 'Kurang')) {
+      w[dmp] = (w[dmp] || 0) - nom;
+    } else if (r.jenis === 'Transfer') {
+      const parts = String(dmp).split('->').map(x => x.trim());
+      if (parts.length === 2) {
+        w[parts[0]] = (w[parts[0]] || 0) - nom;
+        w[parts[1]] = (w[parts[1]] || 0) + nom;
+      }
+    }
+  });
+  return w;
+}
+
+function selisihDompet(d){
+  const inp = document.querySelector('.w-act[data-w="' + d + '"]');
+  if (!inp || !inp.value) return null;
+  return angka(inp.value) - (walletBalances()[d] || 0);
+}
+function updateDiff(inp){
+  const d = inp.dataset.w;
+  const el = document.querySelector('.w-diff[data-w="' + d + '"]');
+  const diff = selisihDompet(d);
+  if (diff === null) { el.textContent = ''; return; }
+  if (diff === 0) { el.textContent = 'Cocok ✓'; el.style.color = 'var(--in)'; return; }
+  el.textContent = 'Selisih ' + (diff > 0 ? '+' : '−') + rp(Math.abs(diff)) + (diff > 0 ? ' (saldo di aplikasi kurang)' : ' (saldo di aplikasi lebih)');
+  el.style.color = 'var(--warn)';
+}
+
+function renderWallet(){
+  const w = walletBalances();
+  $('wCekList').innerHTML = DOMPETS.map(d => `
+    <div class="rec-item" style="display:block">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><strong>${d}</strong><small style="color:var(--mute)">Menurut aplikasi: ${rp(w[d] || 0)}</small></div>
+      <input type="text" class="w-act" data-w="${d}" inputmode="numeric" autocomplete="off" placeholder="Saldo sebenarnya di ${d}">
+      <small class="w-diff" data-w="${d}" style="display:block;margin-top:4px;min-height:1.1em"></small>
+    </div>`).join('');
+  document.querySelectorAll('.w-act').forEach(inp => {
+    formatInputRp(inp);
+    inp.addEventListener('input', () => updateDiff(inp));
+  });
+  const aw = config.saldoAwal || {};
+  $('wAwalList').innerHTML = DOMPETS.map(d =>
+    `<label class="f">${d}<input type="text" class="w-awal" data-w="${d}" inputmode="numeric" autocomplete="off" placeholder="Rp 0" value="${aw[d] ? 'Rp ' + Number(aw[d]).toLocaleString('id-ID') : ''}"></label>`
+  ).join('');
+  document.querySelectorAll('.w-awal').forEach(formatInputRp);
+}
+
+document.querySelectorAll('input[name=wTab]').forEach(r => r.addEventListener('change', () => {
+  const tab = document.querySelector('input[name=wTab]:checked').value;
+  $('wCek').hidden = tab !== 'cek';
+  $('wAwal').hidden = tab !== 'awal';
+}));
+$('btnWallet').onclick = () => {
+  renderWallet();
+  document.querySelector('input[name=wTab][value=cek]').checked = true;
+  $('wCek').hidden = false; $('wAwal').hidden = true;
+  $('walletModal').hidden = false;
+};
+$('closeWallet').onclick = () => $('walletModal').hidden = true;
+
+$('btnKoreksi').onclick = () => {
+  if (!pin) { showLoginScreen('Sesi berakhir, masukkan PIN.'); return; }
+  const items = [];
+  DOMPETS.forEach(d => {
+    const diff = selisihDompet(d);
+    if (diff) items.push({ id: uid(), tanggal: today(), jenis: 'Koreksi', kategori: diff > 0 ? 'Tambah' : 'Kurang', nominal: Math.abs(diff), catatan: 'Koreksi saldo ' + d + ' (cek saldo)', oleh: activeOleh, patungan: false, dompet: d });
+  });
+  if (!items.length) { alert('Isi saldo sebenarnya dulu. Kalau semuanya sudah cocok, tidak perlu koreksi.'); return; }
+  if (!confirm('Catat ' + items.length + ' koreksi saldo?')) return;
+  $('walletModal').hidden = true;
+  items.forEach(it => simpanOptimis(it, 'Koreksi saldo tercatat.'));
+};
+
+$('btnSimpanAwal').onclick = async () => {
+  const saldoAwal = {};
+  document.querySelectorAll('.w-awal').forEach(i => { const v = angka(i.value); if (v > 0) saldoAwal[i.dataset.w] = v; });
+  const nextConfig = { ...config, saldoAwal };
+  $('btnSimpanAwal').disabled = true;
+  $('btnSimpanAwal').textContent = 'Menyimpan...';
+  try {
+    await kirim({ action: 'saveConfig', config: nextConfig });
+    config = nextConfig;
+    store.set('config', config);
+    $('walletModal').hidden = true;
+    render();
+    toast('Saldo awal disimpan.');
+  } catch (err) { alert(err.message || 'Gagal menyimpan saldo awal.'); }
+  $('btnSimpanAwal').disabled = false;
+  $('btnSimpanAwal').textContent = 'Simpan Saldo Awal';
 };
 
 // === EKSPOR CSV & PDF ===
@@ -2072,6 +2210,37 @@ function renderDash(){
       <div class="patungan-box">${infoGanti}</div>`;
   } else {
     $('dPatungan').innerHTML = '<p class="empty">Belum ada transaksi yang ditandai sebagai patungan di bulan ini.</p>';
+  }
+
+  const sharedAll = all.filter(r => r.jenis === 'Pengeluaran' && r.patungan);
+  const lunasAll = all.filter(r => r.jenis === 'Lunas');
+  if (sharedAll.length || lunasAll.length) {
+    const pdA = sum(sharedAll.filter(r => r.oleh === 'Ariel')), pdP = sum(sharedAll.filter(r => r.oleh === 'Poppy'));
+    const lunasOf = (from, to) => sum(lunasAll.filter(r => r.oleh === from && r.kategori === to));
+    const owePA = (pdA - pdP) / 2 - lunasOf('Poppy', 'Ariel') + lunasOf('Ariel', 'Poppy');
+    const amt = Math.floor(Math.abs(owePA) + 0.001);
+    const debtor = owePA > 0 ? 'Poppy' : 'Ariel', creditor = owePA > 0 ? 'Ariel' : 'Poppy';
+    if (amt >= 1) {
+      $('dPatungan').insertAdjacentHTML('beforeend', `
+        <div class="patungan-box" style="margin-top:14px;flex-direction:column;align-items:stretch;gap:6px">
+          <div style="display:flex;justify-content:space-between;gap:10px"><span>Utang patungan (kumulatif)</span><b>${rp(amt)}</b></div>
+          <small>${debtor} → ${creditor}</small>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <input type="text" id="lunasNom" inputmode="numeric" autocomplete="off" value="Rp ${amt.toLocaleString('id-ID')}" style="margin:0;min-height:40px">
+            <button type="button" class="pill ok" id="btnLunas" style="white-space:nowrap">Tandai lunas</button>
+          </div>
+        </div>`);
+      formatInputRp($('lunasNom'));
+      $('btnLunas').onclick = () => {
+        const nom = angka($('lunasNom').value);
+        if (!nom) { alert('Isi nominal lebih dari 0.'); return; }
+        if (nom > amt) { alert('Nominal melebihi utang patungan (' + rp(amt) + ').'); return; }
+        if (!pin) { showLoginScreen('Sesi berakhir, masukkan PIN.'); return; }
+        simpanOptimis({ id: uid(), tanggal: today(), jenis: 'Lunas', kategori: creditor, nominal: nom, catatan: debtor + ' melunasi patungan ke ' + creditor, oleh: debtor, patungan: false, dompet: 'Bank' }, 'Pelunasan tercatat.');
+      };
+    } else {
+      $('dPatungan').insertAdjacentHTML('beforeend', '<div class="patungan-box" style="margin-top:14px"><span>Utang patungan (kumulatif)</span><b>Lunas ✓</b></div>');
+    }
   }
 
   $('dOrang').innerHTML = `
